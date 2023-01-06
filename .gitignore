@@ -1,4 +1,4 @@
 /cmake-build-debug/CMakeFiles/Sync_files.dir/compiler_depend.internal
-.xml
-.obj
+.idea/*.*
+
 
