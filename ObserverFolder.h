@@ -6,7 +6,20 @@
 #define SYNC_FILES_OBSERVERFOLDER_H
 
 
-class ObserverFolder {
+#include <string>
+#include "Observer.h"
+#include "ObservedFolder.h"
+
+class ObserverFolder : public Observer {
+public:
+    ObserverFolder(const std::string &folderPath, ObservedFolder *observedFolder);
+
+    /// \brief Do folder synchronization here
+    void update() override;
+
+private:
+    ObservedFolder *observedFolder_;
+    std::filesystem::path folder_;
 
 };
 
