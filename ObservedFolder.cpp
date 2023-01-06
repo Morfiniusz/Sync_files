@@ -4,6 +4,10 @@
 
 #include "ObservedFolder.h"
 
+ObservedFolder::ObservedFolder(const std::string &folderPath) : folder_(folderPath),
+                                                                lastModyfiedTime_(
+                                                                        std::filesystem::last_write_time(folder_)) {}
+
 void ObservedFolder::registerObserver(Observer *observer) {
     this->observers_.push_back(observer);
 }
@@ -15,12 +19,11 @@ void ObservedFolder::checkForChanges() {
         lastModyfiedTime_ = currentTimeInFolder;
         notifyObservers();
     }
-
 }
 
 void ObservedFolder::notifyObservers() {
     for (auto observer: observers_) {
-        observer->upadate();
+        observer->update();
     }
 }
 

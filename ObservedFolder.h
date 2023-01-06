@@ -13,8 +13,7 @@
 class ObservedFolder {
 
 public:
-    ObservedFolder(const std::string &folderPath) : folder_(folderPath),
-                                                    lastModyfiedTime_(std::filesystem::last_write_time(folder_)) {};
+    ObservedFolder(const std::string &folderPath) ;
     //Add folders which observes this object/folder to the list of observers
     void registerObserver(Observer* observer);
 
