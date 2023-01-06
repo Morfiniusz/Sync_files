@@ -36,7 +36,7 @@ void addDiffrenceFileToTemp(const fs::path &source,
     }
     auto sourceTime = fs::last_write_time(source);
 
-    //check if the source folder has been modified
+    //check if the source folder has been modified and than copy the files to the destination folder
     for (auto &entry: fs::recursive_directory_iterator(source)) {
         if (entry.is_directory()) {
             auto path = entry.path();
