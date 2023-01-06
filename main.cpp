@@ -18,8 +18,7 @@ std::atomic<bool> once = true;
 /// \param mutex
 /// \param cv
 /// \param isReady
-/// @brief The function browses directories and synchronizes between
-/// the source folder and the specified folder
+/// @brief The function browses directories and synchronizes from source to destination folder
 void addDiffrenceFileToTemp(const fs::path &source,
                             const fs::path &destination,
                             std::mutex &mutex,
@@ -77,6 +76,7 @@ int main() {
     std::condition_variable cv;
 
     do {
+        //one way synnchronization from source to destination
         addDiffrenceFileToTemp(source, destination, mutex, cv, true);
         std::cout << "Sleeping..." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(2));
