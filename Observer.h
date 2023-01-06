@@ -9,7 +9,7 @@
 
 class Observer {
 public:
-    virtual void upadate() = 0;
+    virtual void update() = 0;
 };
 
 #endif //SYNC_FILES_OBSERVER_H
