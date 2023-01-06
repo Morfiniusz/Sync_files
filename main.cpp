@@ -35,7 +35,7 @@ void addDiffrenceFileToTemp(const fs::path &source,
     }
     auto sourceTime = fs::last_write_time(source);
 
-    //check if the source folder has been modified and then copy the files to the destination folder
+    //check if the source folder_ has been modified and then copy the files to the destination folder_
     for (auto &entry: fs::recursive_directory_iterator(source)) {
         if (entry.is_directory()) {
             auto path = entry.path();
@@ -46,7 +46,7 @@ void addDiffrenceFileToTemp(const fs::path &source,
                 fs::copy(path, destinationPath, fs::copy_options::recursive);
             } else {
                 if (sourceTime != sourceTimePrevious) {
-                    std::cout << "Source folder has been modified" << std::endl;
+                    std::cout << "Source folder_ has been modified" << std::endl;
                     std::cout << "Source time: " << sourceTime.time_since_epoch().count() << std::endl;
                     std::cout << "sourceTimePrevious time: " << sourceTimePrevious.time_since_epoch().count()
                               << std::endl;
