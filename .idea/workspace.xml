@@ -21,12 +21,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1ba4afa5-f5ad-4585-80a1-fff4bd1ba428" name="Changes" comment="Added Observer interface">
-      <change afterPath="$PROJECT_DIR$/ObservedFolder.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ObservedFolder.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="1ba4afa5-f5ad-4585-80a1-fff4bd1ba428" name="Changes" comment="Added changes Doxygen comment">
+      <change afterPath="$PROJECT_DIR$/ObserverFolder.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ObserverFolder.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -201,7 +199,28 @@
       <option name="project" value="LOCAL" />
       <updated>1672970919669</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Added ObservedFolder class">
+      <created>1672970949645</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1672970949645</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Added changes to cmake">
+      <created>1672970969693</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1672970969693</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Added changes Doxygen comment">
+      <created>1672971003934</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1672971003934</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -244,7 +263,10 @@
     <MESSAGE value="Added comment about one way synchronization" />
     <MESSAGE value="Added tracking of 3 xml files" />
     <MESSAGE value="Added Observer interface" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Observer interface" />
+    <MESSAGE value="Added ObservedFolder class" />
+    <MESSAGE value="Added changes to cmake" />
+    <MESSAGE value="Added changes Doxygen comment" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added changes Doxygen comment" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
