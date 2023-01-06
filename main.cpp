@@ -9,7 +9,7 @@
 namespace fs = std::filesystem;
 fs::file_time_type sourceTimePrevious;
 
-bool once = true;
+std::atomic<bool> once = true;
 
 
 ///
@@ -36,8 +36,7 @@ void addDiffrenceFileToTemp(const fs::path &source,
     }
     auto sourceTime = fs::last_write_time(source);
 
-    //Check recursively if the source and destination folders have the same number of subfolders
-    //Check modification time of all subfolder and compare it with the destination folder and its subfolders
+    //check if the source folder has been modified
     for (auto &entry: fs::recursive_directory_iterator(source)) {
         if (entry.is_directory()) {
             auto path = entry.path();
