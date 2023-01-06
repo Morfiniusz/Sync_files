@@ -51,7 +51,7 @@ void addDiffrenceFileToTemp(const fs::path &source,
                     std::cout << "sourceTimePrevious time: " << sourceTimePrevious.time_since_epoch().count()
                               << std::endl;
 
-                    fs::remove_all(destinationPath);
+                    fs::remove_all(destinationPath); //TODO: get rid of remove_all
                     fs::copy(path, destinationPath, fs::copy_options::recursive);
 
                     sourceTimePrevious = sourceTime;
