@@ -28,6 +28,9 @@ void addDiffrenceFileToTemp(const fs::path &source,
     std::unique_lock<std::mutex> lock(mutex); //TODO: Make this function thread safe. Add lock_guard
     cv.wait(lock, [&isReady] { return isReady; });
 
+
+
+    
     //check once
     if (once) {
         sourceTimePrevious = fs::last_write_time(source);
