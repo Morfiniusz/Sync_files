@@ -30,7 +30,7 @@ void addDiffrenceFileToTemp(const fs::path &source,
 
 
 
-    
+
     //check once
     if (once) {
         sourceTimePrevious = fs::last_write_time(source);
