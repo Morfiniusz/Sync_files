@@ -10,7 +10,10 @@ namespace fs = std::filesystem;
 fs::file_time_type sourceTimePrevious;
 
 std::atomic<bool> once = true;
+std::atomic<bool> autoFolderSync{false};
+std::atomic<bool> threadRun{true};
 
+std::mutex mutexDiffrenceFun;
 
 ///
 /// \param source
@@ -19,14 +22,11 @@ std::atomic<bool> once = true;
 /// \param cv
 /// \param isReady
 /// @brief The function browses directories and synchronizes from source to destination folder
-void addDiffrenceFileToTemp(const fs::path &source,
-                            const fs::path &destination,
-                            std::mutex &mutex,
-                            std::condition_variable &cv,
-                            bool isReady) {
+void folderSync(const fs::path &source, const fs::path &destination) {
+    std::cout << "Folder sync begin" << std::endl;
 
-    std::unique_lock<std::mutex> lock(mutex); //TODO: Make this function thread safe. Add lock_guard
-    cv.wait(lock, [&isReady] { return isReady; });
+    std::unique_lock<std::mutex> lock(mutexDiffrenceFun); //TODO: Make this function thread safe. Add lock_guard
+//    cv.wait(lock, [&isReady] { return isReady; });
 
 
 
@@ -62,6 +62,7 @@ void addDiffrenceFileToTemp(const fs::path &source,
             }
         }
     }
+    std::cout << "Folder sync end" << std::endl;
 }
 
 const fs::path currentPath = fs::current_path();
