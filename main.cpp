@@ -15,6 +15,13 @@ std::atomic<bool> threadRun{true};
 
 std::mutex mutexDiffrenceFun;
 
+enum class MENU_OPTIONS {
+    RUN_ONCE = 1,
+    AUTO_SYNC_ON,
+    AUTO_SYNC_OFF,
+    END
+};
+
 ///
 /// \param source
 /// \param destination
