@@ -5,6 +5,9 @@
 #include <condition_variable>
 #include <algorithm>
 #include <filesystem>
+#include <atomic>
+#include <stdio.h>
+#include <future>
 
 namespace fs = std::filesystem;
 fs::file_time_type sourceTimePrevious;
@@ -34,9 +37,6 @@ void folderSync(const fs::path &source, const fs::path &destination) {
 
     std::unique_lock<std::mutex> lock(mutexDiffrenceFun); //TODO: Make this function thread safe. Add lock_guard
 //    cv.wait(lock, [&isReady] { return isReady; });
-
-
-
 
     //check once
     if (once) {
@@ -73,8 +73,26 @@ void folderSync(const fs::path &source, const fs::path &destination) {
 }
 
 const fs::path currentPath = fs::current_path();
-const fs::path source = currentPath.parent_path() / "Test\\TestFolder\\MasterFolder";
-const fs::path destination = currentPath.parent_path() / "Test\\TestFolder\\DestinationFolder";
+const fs::path source = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
+const fs::path destination = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
+
+const int menuOptionExit = 4;
+
+void displayMenu() {
+    std::cout << "1. Run sync once" << std::endl;
+    std::cout << "2. Start auto sync [100 ms]" << std::endl;
+    std::cout << "3. Stop auto sync [100 ms]" << std::endl;
+    std::cout << "4. End" << std::endl;
+}
+
+void runDiff() {
+    while (threadRun) {
+        if (autoFolderSync) {
+            auto var = std::async(std::launch::async, folderSync, source, destination);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+}
 
 int main() {
     std::cout << "Source: " << source << std::endl;
@@ -83,12 +101,44 @@ int main() {
     std::mutex mutex;
     std::condition_variable cv;
 
-    do {
-        //one way synnchronization from source to destination
-        addDiffrenceFileToTemp(source, destination, mutex, cv, true);
-        std::cout << "Sleeping..." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-    } while (true);
+    std::thread t1(runDiff);
+
+    int option = 0;
+    MENU_OPTIONS menuOptions = MENU_OPTIONS::END;
+    while (option != menuOptionExit) {
+        displayMenu();
+        std::cin >> option;
+        menuOptions = static_cast<MENU_OPTIONS>(option);
+        switch (menuOptions) {
+            case MENU_OPTIONS::RUN_ONCE: {
+                auto var = std::async(std::launch::async, folderSync, source, destination);
+                break;
+            }
+
+            case MENU_OPTIONS::AUTO_SYNC_ON: {
+                autoFolderSync.store(true);
+                break;
+            }
+
+            case MENU_OPTIONS::AUTO_SYNC_OFF: {
+                autoFolderSync.store(false);
+                break;
+            }
+
+            case MENU_OPTIONS::END: {
+                //stop thread responsible for auto sync of folders
+                threadRun.store(false);
+                break;
+            }
+
+
+            default:
+                std::cout << "Unimplemented function" << std::endl;
+                break;
+        }
+    };
+
+    t1.join();
 
     return 0;
 }
