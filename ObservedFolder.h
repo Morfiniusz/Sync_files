@@ -9,22 +9,40 @@
 #include <list>
 #include <filesystem>
 #include "Observer.h"
+#include <thread>
 
 class ObservedFolder {
 
 public:
-    ObservedFolder(const std::string &folderPath) ;
+    ObservedFolder(const std::filesystem::path &folderPath);
+
+    ~ObservedFolder();
+
     //Add folders which observes this object/folder to the list of observers
-    void registerObserver(Observer* observer);
+    void registerObserver(Observer *observer);
 
     //Check if sth has changed in observed folder
     void checkForChanges();
+
+    void autoCheckForChangesStart();
+
+    void autoCheckForChangesStop();
+
+    void infiniteCheckForChanges();
+
     void notifyObservers();
+
+    std::filesystem::path getFolderPath() const;
+
+    std::thread autoCheckThread_;
 
 private:
     std::list<Observer *> observers_;
-    std::filesystem::path folder_;
+    std::filesystem::path folderPath_;
+
     std::filesystem::file_time_type lastModyfiedTime_;
+    std::atomic<bool> enableAutoSync_{false};
+    std::mutex autoCheckMutex_;
 };
 
 

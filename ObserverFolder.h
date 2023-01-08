@@ -7,20 +7,25 @@
 
 
 #include <string>
+#include <filesystem>
 #include "Observer.h"
 #include "ObservedFolder.h"
 
 class ObserverFolder : public Observer {
 public:
-    ObserverFolder(const std::string &folderPath, ObservedFolder *observedFolder);
+    ObserverFolder(const std::filesystem::path &folderPath, ObservedFolder *observedFolder);
 
     /// \brief Do folder synchronization here
     void update() override;
 
 private:
     ObservedFolder *observedFolder_;
-    std::filesystem::path folder_;
+    std::filesystem::path folderPath_;
 
+    std::mutex mutex_;
+
+    bool once{true};
+    std::filesystem::file_time_type sourceTimePrevious{std::filesystem::file_time_type::min()};
 };
 
 

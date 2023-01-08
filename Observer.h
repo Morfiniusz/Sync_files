@@ -7,6 +7,8 @@
 #ifndef SYNC_FILES_OBSERVER_H
 #define SYNC_FILES_OBSERVER_H
 
+#include <filesystem>
+
 class Observer {
 public:
     virtual void update() = 0;
