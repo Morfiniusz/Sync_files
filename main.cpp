@@ -51,8 +51,6 @@ void displayMenu(ObservedFolder &observedFolder) {
             case MENU_OPTIONS::END: {
 //                stop thread responsible for auto sync of folders
                 observedFolder.autoCheckForChangesStop();
-
-                observedFolder.autoCheckThread_.join();
                 std::cout << "End" << std::endl;
                 break;
             }
@@ -66,8 +64,8 @@ void displayMenu(ObservedFolder &observedFolder) {
 
 
 int main() {
-    ObservedFolder observedFolder(sourcePath.string());
-    ObserverFolder observerFolder(destinationPath.string(), &observedFolder);
+    ObservedFolder observedFolder(sourcePath);
+    ObserverFolder observerFolder(destinationPath, &observedFolder);
     //You can add more observers to the observed folder!
     observedFolder.registerObserver(&observerFolder);
 

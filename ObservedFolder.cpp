@@ -29,6 +29,7 @@ void ObservedFolder::notifyObservers() {
     for (auto observer: observers_) {
         std::cout << "Notify observers. Run update asynchronously" << std::endl;
         auto updateTask = std::async(std::launch::async, &Observer::update, observer);
+        updateTask.get();
     }
 }
 
@@ -62,7 +63,9 @@ void ObservedFolder::autoCheckForChangesStop() {
 }
 
 ObservedFolder::~ObservedFolder() {
-    autoCheckThread_.join();
+    if(autoCheckThread_.joinable()) {
+        autoCheckThread_.join();
+    }
 }
 
 
