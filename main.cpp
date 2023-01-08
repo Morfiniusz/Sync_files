@@ -3,6 +3,7 @@
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
 
+
 namespace fs = std::filesystem;
 
 enum class MENU_OPTIONS {
@@ -15,7 +16,7 @@ enum class MENU_OPTIONS {
 const fs::path currentPath = fs::current_path();
 const fs::path sourcePath = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
 const fs::path destinationPath = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
-
+const fs::path destinationPath2 = currentPath.parent_path() / "Test/TestFolder/DestinationFolder2";
 
 void showOptions() {
     std::cout << "1. Run sync once" << std::endl;
@@ -49,8 +50,6 @@ void displayMenu(ObservedFolder &observedFolder) {
             }
 
             case MENU_OPTIONS::END: {
-//                stop thread responsible for auto sync of folders
-                observedFolder.autoCheckForChangesStop();
                 std::cout << "End" << std::endl;
                 break;
             }
@@ -66,8 +65,11 @@ void displayMenu(ObservedFolder &observedFolder) {
 int main() {
     ObservedFolder observedFolder(sourcePath);
     ObserverFolder observerFolder(destinationPath, &observedFolder);
+    ObserverFolder observerFolder2(destinationPath2, &observedFolder);
+
     //You can add more observers to the observed folder!
     observedFolder.registerObserver(&observerFolder);
+    observedFolder.registerObserver(&observerFolder2);
 
     //display menu in infinite loop
     displayMenu(observedFolder);

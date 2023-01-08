@@ -16,9 +16,13 @@ void ObserverFolder::update() {
     //mutex
     std::lock_guard<std::mutex> lock(mutex_);
 
-    std::cout << "Folder sync begin in OBSERVER!!!" << std::endl;
+    std::cout << "Folder sync begin in OBSERVER!!! for folder: \n" << folderPath_ << std::endl;
 
+    //TODO: make it async for every 'entry'
     for (auto &entry: std::filesystem::recursive_directory_iterator(observedFolder_->getFolderPath())) {
+        std::cout << "entry.path()" << entry.path() << std::endl;
+
+        //Works only for folders
         if (entry.is_directory()) {
             auto path = entry.path();
             auto relativePath = std::filesystem::relative(path, observedFolder_->getFolderPath());
@@ -34,5 +38,5 @@ void ObserverFolder::update() {
             }
         }
     }
-    std::cout << "Folder sync end in OBSERVER!!!" << std::endl << std::endl;
+    std::cout << "Folder sync ended in OBSERVER!!!for folder: \n" << folderPath_ << std::endl << std::endl;
 }
