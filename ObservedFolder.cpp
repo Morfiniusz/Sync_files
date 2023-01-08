@@ -17,7 +17,7 @@ void ObservedFolder::registerObserver(Observer *observer) {
 }
 
 void ObservedFolder::checkForChanges() {
-    std::cout<<"Checking for changes in folder: "<<folderPath_<<std::endl;
+    std::cout << "Checking for changes in folder: " << folderPath_ << std::endl;
     auto currentTimeInFolder = std::filesystem::last_write_time(folderPath_);
     //curr time is always bigger
     if (currentTimeInFolder > lastModyfiedTime_) {

@@ -29,12 +29,25 @@ void ObserverFolder::update() {
             auto destinationPathForCheck = this->folderPath_ / relativePath;
             if (!std::filesystem::exists(destinationPathForCheck)) {
                 std::cout << "Destination folderPath_ doesn't exist" << std::endl;
-                std::filesystem::remove_all(destinationPathForCheck); //TODO: get rid of remove_all
+                std::filesystem::remove(destinationPathForCheck); //TODO: get rid of remove_all
                 std::filesystem::copy(path, destinationPathForCheck, std::filesystem::copy_options::recursive);
             } else {
                 std::cout << "Source folderPath_ has been modified" << std::endl;
-                std::filesystem::remove_all(destinationPathForCheck); //TODO: get rid of remove_all
+                std::filesystem::remove(destinationPathForCheck); //TODO: get rid of remove_all
                 std::filesystem::copy(path, destinationPathForCheck, std::filesystem::copy_options::recursive);
+            }
+        } else {
+            auto path = entry.path();
+            auto relativePath = std::filesystem::relative(path, observedFolder_->getFolderPath());
+            auto destinationPathForCheck = this->folderPath_ / relativePath;
+            if (!std::filesystem::exists(destinationPathForCheck)) {
+                std::cout << "Destination file doesn't exist" << std::endl;
+                std::filesystem::remove(destinationPathForCheck);
+                std::filesystem::copy_file(path, destinationPathForCheck);
+            } else {
+                std::cout << "Source file has been modified" << std::endl;
+                std::filesystem::remove(destinationPathForCheck);
+                std::filesystem::copy_file(path, destinationPathForCheck);
             }
         }
     }
