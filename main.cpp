@@ -1,6 +1,6 @@
 #include <iostream>
 #include <filesystem>
-2#include "ObservedFolder.h"
+#include "ObservedFolder.h"
 #include "ObserverFolder.h"
 
 namespace fs = std::filesystem;
@@ -16,8 +16,6 @@ const fs::path currentPath = fs::current_path();
 const fs::path sourcePath = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
 const fs::path destinationPath = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
 
-ObservedFolder observedFolder(sourcePath.string());
-ObserverFolder observerFolder(destinationPath.string(), &observedFolder);
 
 void showOptions() {
     std::cout << "1. Run sync once" << std::endl;
@@ -26,7 +24,7 @@ void showOptions() {
     std::cout << "4. End" << std::endl;
 }
 
-void displayMenu() {
+void displayMenu(ObservedFolder &observedFolder) {
     int option = 0;
     MENU_OPTIONS menuOptions{};
     while (menuOptions != MENU_OPTIONS::END) {
@@ -41,19 +39,19 @@ void displayMenu() {
             }
 
             case MENU_OPTIONS::AUTO_SYNC_ON: {
-//                autoFolderSync.store(true);
                 observedFolder.autoCheckForChangesStart();
                 break;
             }
 
             case MENU_OPTIONS::AUTO_SYNC_OFF: {
-//                autoFolderSync.store(false);
                 observedFolder.autoCheckForChangesStop();
                 break;
             }
 
             case MENU_OPTIONS::END: {
 //                stop thread responsible for auto sync of folders
+                observedFolder.autoCheckForChangesStop();
+
                 observedFolder.autoCheckThread_.join();
                 std::cout << "End" << std::endl;
                 break;
@@ -68,11 +66,13 @@ void displayMenu() {
 
 
 int main() {
+    ObservedFolder observedFolder(sourcePath.string());
+    ObserverFolder observerFolder(destinationPath.string(), &observedFolder);
     //You can add more observers to the observed folder!
     observedFolder.registerObserver(&observerFolder);
 
     //display menu in infinite loop
-    displayMenu();
+    displayMenu(observedFolder);
 
     return 0;
 }
