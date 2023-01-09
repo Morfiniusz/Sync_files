@@ -6,5 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(FLAGS -Wall -Wpedantic -Werror -Wconversion -Wextra -O3)
 
-add_executable(${PROJECT_NAME} main.cpp)
+set(Observer
+        ObservedFolder.cpp
+        ObservedFolder.h
+        ObserverFolder.cpp
+        ObserverFolder.h
+        )
+
+add_executable(${PROJECT_NAME} main.cpp ${Observer})
 target_compile_options(${PROJECT_NAME} PRIVATE ${FLAGS})

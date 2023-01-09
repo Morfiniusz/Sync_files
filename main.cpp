@@ -1,86 +1,78 @@
 #include <iostream>
-#include <thread>
-#include <chrono>
-#include <mutex>
-#include <condition_variable>
-#include <algorithm>
 #include <filesystem>
+#include "ObservedFolder.h"
+#include "ObserverFolder.h"
+
 
 namespace fs = std::filesystem;
-fs::file_time_type sourceTimePrevious;
 
-std::atomic<bool> once = true;
+enum class MENU_OPTIONS {
+    RUN_ONCE = 1,
+    AUTO_SYNC_ON,
+    AUTO_SYNC_OFF,
+    END
+};
 
+const fs::path currentPath = fs::current_path();
+const fs::path sourcePath = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
+const fs::path destinationPath = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
+const fs::path destinationPath2 = currentPath.parent_path() / "Test/TestFolder/DestinationFolder2";
 
-///
-/// \param source
-/// \param destination
-/// \param mutex
-/// \param cv
-/// \param isReady
-/// @brief The function browses directories and synchronizes from source to destination folder
-void addDiffrenceFileToTemp(const fs::path &source,
-                            const fs::path &destination,
-                            std::mutex &mutex,
-                            std::condition_variable &cv,
-                            bool isReady) {
+void showOptions() {
+    std::cout << "1. Run sync once" << std::endl;
+    std::cout << "2. Start auto sync [100 ms]" << std::endl;
+    std::cout << "3. Stop auto sync [100 ms]" << std::endl;
+    std::cout << "4. End" << std::endl;
+}
 
-    std::unique_lock<std::mutex> lock(mutex); //TODO: Make this function thread safe. Add lock_guard
-    cv.wait(lock, [&isReady] { return isReady; });
-
-    //check once
-    if (once) {
-        sourceTimePrevious = fs::last_write_time(source);
-        once = false;
-    }
-    auto sourceTime = fs::last_write_time(source);
-
-    //check if the source folder has been modified and then copy the files to the destination folder
-    for (auto &entry: fs::recursive_directory_iterator(source)) {
-        if (entry.is_directory()) {
-            auto path = entry.path();
-            auto relativePath = fs::relative(path, source);
-            auto destinationPath = destination / relativePath;
-            if (!fs::exists(destinationPath)) {
-                fs::remove_all(destinationPath); //TODO: get rid of remove_all
-                fs::copy(path, destinationPath, fs::copy_options::recursive);
-            } else {
-                if (sourceTime != sourceTimePrevious) {
-                    std::cout << "Source folder has been modified" << std::endl;
-                    std::cout << "Source time: " << sourceTime.time_since_epoch().count() << std::endl;
-                    std::cout << "sourceTimePrevious time: " << sourceTimePrevious.time_since_epoch().count()
-                              << std::endl;
-
-                    fs::remove_all(destinationPath); //TODO: get rid of remove_all
-                    fs::copy(path, destinationPath, fs::copy_options::recursive);
-
-                    sourceTimePrevious = sourceTime;
-                }
+void displayMenu(ObservedFolder &observedFolder) {
+    int option = 0;
+    MENU_OPTIONS menuOptions{};
+    while (menuOptions != MENU_OPTIONS::END) {
+        showOptions();
+        //cast cin to MENU_OPTION
+        std::cin >> option;
+        menuOptions = static_cast<MENU_OPTIONS>(option);
+        switch (menuOptions) {
+            case MENU_OPTIONS::RUN_ONCE: {
+                observedFolder.notifyObservers();
+                break;
             }
+
+            case MENU_OPTIONS::AUTO_SYNC_ON: {
+                observedFolder.autoCheckForChangesStart();
+                break;
+            }
+
+            case MENU_OPTIONS::AUTO_SYNC_OFF: {
+                observedFolder.autoCheckForChangesStop();
+                break;
+            }
+
+            case MENU_OPTIONS::END: {
+                std::cout << "End" << std::endl;
+                break;
+            }
+
+            default:
+                std::cout << "Unimplemented function" << std::endl;
+                break;
         }
     }
 }
 
-const fs::path currentPath = fs::current_path();
-const fs::path source = currentPath.parent_path() / "Test\\TestFolder\\MasterFolder";
-const fs::path destination = currentPath.parent_path() / "Test\\TestFolder\\DestinationFolder";
 
 int main() {
-    std::cout
-            << "Hello world ... bo od czegoś trzeba zacząć ... za kilka dni będzie to potężny program do synchronizowania plików xD xD xD\n";
+    ObservedFolder observedFolder(sourcePath);
+    ObserverFolder observerFolder(destinationPath, &observedFolder);
+    ObserverFolder observerFolder2(destinationPath2, &observedFolder);
 
-    std::cout << "Source: " << source << std::endl;
-    std::cout << "Destination: " << destination << std::endl;
+    //You can add more observers to the observed folder!
+    observedFolder.registerObserver(&observerFolder);
+    observedFolder.registerObserver(&observerFolder2);
 
-    std::mutex mutex;
-    std::condition_variable cv;
-
-    do {
-        //one way synnchronization from source to destination
-        addDiffrenceFileToTemp(source, destination, mutex, cv, true);
-        std::cout << "Sleeping..." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-    } while (true);
+    //display menu in infinite loop
+    displayMenu(observedFolder);
 
     return 0;
 }
