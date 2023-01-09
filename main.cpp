@@ -49,22 +49,24 @@ void mainMenu(ObservedFolder &observedFolderObj) {
             }
 
             case MENU_OPTIONS::AUTO_SYNC_ON: {
-                observedFolderObj.autoCheckForChangesStart();
+                autoFolderSync.store(true);
                 break;
             }
 
             case MENU_OPTIONS::AUTO_SYNC_OFF: {
-                observedFolderObj.autoCheckForChangesStop();
+                autoFolderSync.store(false);
                 break;
             }
 
             case MENU_OPTIONS::END: {
+                threadRun.store(false);
                 std::cout << "End" << std::endl;
                 break;
             }
 
             default:
                 std::cout << "Unimplemented function" << std::endl;
+                threadRun.store(false);
                 break;
         }
     }
@@ -80,6 +82,7 @@ void runDiff() {
 }
 
 int main() {
+
     std::thread runDiffThread(runDiff);
 
     //You can add more observers to the observed folder!
