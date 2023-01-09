@@ -11,6 +11,8 @@ set(Observer
         ObservedFolder.h
         ObserverFolder.cpp
         ObserverFolder.h
+        ThreadTimer.cpp
+        ThreadTimer.h
         )
 
 add_executable(${PROJECT_NAME} main.cpp ${Observer})
