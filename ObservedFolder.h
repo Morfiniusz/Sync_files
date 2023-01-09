@@ -10,6 +10,7 @@
 #include <filesystem>
 #include "Observer.h"
 #include <thread>
+#include <future>
 
 class ObservedFolder {
 
