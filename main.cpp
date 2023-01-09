@@ -3,6 +3,7 @@
 #include <future>
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
+#include "ThreadTimer.h"
 
 
 std::atomic<bool> once = true;
@@ -82,19 +83,21 @@ void runDiff() {
 }
 
 int main() {
+    {
+        std::thread runDiffThread(runDiff);
 
-    std::thread runDiffThread(runDiff);
+        //You can add more observers to the observed folder!
+        observedFolder.registerObserver(&observerFolder);
+        observedFolder.registerObserver(&observerFolder2);
 
-    //You can add more observers to the observed folder!
-    observedFolder.registerObserver(&observerFolder);
-    observedFolder.registerObserver(&observerFolder2);
-
-    //Make global observer for all folders
+        //Make global observer for all folders
 //    observedFolder.registerObserver(&globalObserver);
 
-    //display menu in infinite loop
-    mainMenu(observedFolder);
-    runDiffThread.join();
+        //display menu in infinite loop
+//        ThreadTimer<ObservedFolder> threadTimer(&ObservedFolder::checkForChanges); //TODO: FIX TIMER and std::function
+        mainMenu(observedFolder);
+        runDiffThread.join();
+    }
 
     return 0;
 }
