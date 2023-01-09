@@ -61,7 +61,6 @@ void displayMenu(ObservedFolder &observedFolder) {
     }
 }
 
-
 int main() {
     ObservedFolder observedFolder(sourcePath);
     ObserverFolder observerFolder(destinationPath, &observedFolder);
@@ -70,6 +69,8 @@ int main() {
     //You can add more observers to the observed folder!
     observedFolder.registerObserver(&observerFolder);
     observedFolder.registerObserver(&observerFolder2);
+
+    //make global observer for all folders
 
     //display menu in infinite loop
     displayMenu(observedFolder);
