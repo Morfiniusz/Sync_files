@@ -1,51 +1,60 @@
 #include <iostream>
 #include <filesystem>
+#include <future>
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
 
 
-namespace fs = std::filesystem;
+std::atomic<bool> once = true;
+std::atomic<bool> autoFolderSync{false};
+std::atomic<bool> threadRun{true};
+
+std::mutex mutexDiffrenceFun;
 
 enum class MENU_OPTIONS {
-    RUN_ONCE = 1,
+    SYNC_ONCE = 1,
     AUTO_SYNC_ON,
     AUTO_SYNC_OFF,
     END
 };
 
-const fs::path currentPath = fs::current_path();
-const fs::path sourcePath = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
-const fs::path destinationPath = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
-const fs::path destinationPath2 = currentPath.parent_path() / "Test/TestFolder/DestinationFolder2";
+const std::filesystem::path currentPath = std::filesystem::current_path();
+const std::filesystem::path sourcePath = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
+const std::filesystem::path destinationPath = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
+const std::filesystem::path destinationPath2 = currentPath.parent_path() / "Test/TestFolder/DestinationFolder2";
 
-void showOptions() {
+ObservedFolder observedFolder(sourcePath);
+ObserverFolder observerFolder(destinationPath, &observedFolder);
+ObserverFolder observerFolder2(destinationPath2, &observedFolder);
+
+void displayMenu() {
     std::cout << "1. Run sync once" << std::endl;
     std::cout << "2. Start auto sync [100 ms]" << std::endl;
     std::cout << "3. Stop auto sync [100 ms]" << std::endl;
     std::cout << "4. End" << std::endl;
 }
 
-void displayMenu(ObservedFolder &observedFolder) {
+void mainMenu(ObservedFolder &observedFolderObj) {
     int option = 0;
     MENU_OPTIONS menuOptions{};
     while (menuOptions != MENU_OPTIONS::END) {
-        showOptions();
+        displayMenu();
         //cast cin to MENU_OPTION
         std::cin >> option;
         menuOptions = static_cast<MENU_OPTIONS>(option);
         switch (menuOptions) {
-            case MENU_OPTIONS::RUN_ONCE: {
-                observedFolder.notifyObservers();
+            case MENU_OPTIONS::SYNC_ONCE: {
+                observedFolderObj.notifyObservers();
                 break;
             }
 
             case MENU_OPTIONS::AUTO_SYNC_ON: {
-                observedFolder.autoCheckForChangesStart();
+                observedFolderObj.autoCheckForChangesStart();
                 break;
             }
 
             case MENU_OPTIONS::AUTO_SYNC_OFF: {
-                observedFolder.autoCheckForChangesStop();
+                observedFolderObj.autoCheckForChangesStop();
                 break;
             }
 
@@ -61,19 +70,28 @@ void displayMenu(ObservedFolder &observedFolder) {
     }
 }
 
+void runDiff() {
+    while (threadRun) {
+        if (autoFolderSync) {
+            observedFolder.checkForChanges();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+}
+
 int main() {
-    ObservedFolder observedFolder(sourcePath);
-    ObserverFolder observerFolder(destinationPath, &observedFolder);
-    ObserverFolder observerFolder2(destinationPath2, &observedFolder);
+    std::thread runDiffThread(runDiff);
 
     //You can add more observers to the observed folder!
     observedFolder.registerObserver(&observerFolder);
     observedFolder.registerObserver(&observerFolder2);
 
-    //make global observer for all folders
+    //Make global observer for all folders
+//    observedFolder.registerObserver(&globalObserver);
 
     //display menu in infinite loop
-    displayMenu(observedFolder);
+    mainMenu(observedFolder);
+    runDiffThread.join();
 
     return 0;
 }
