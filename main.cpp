@@ -28,6 +28,8 @@ ObservedFolder observedFolder(sourcePath);
 ObserverFolder observerFolder(destinationPath, &observedFolder);
 ObserverFolder observerFolder2(destinationPath2, &observedFolder);
 
+ThreadTimer threadTimer([]() { observedFolder.checkForChanges(); });
+
 void displayMenu() {
     std::cout << "1. Run sync once" << std::endl;
     std::cout << "2. Start auto sync [100 ms]" << std::endl;
@@ -50,17 +52,17 @@ void mainMenu(ObservedFolder &observedFolderObj) {
             }
 
             case MENU_OPTIONS::AUTO_SYNC_ON: {
-                autoFolderSync.store(true);
+                threadTimer.start();
                 break;
             }
 
             case MENU_OPTIONS::AUTO_SYNC_OFF: {
-                autoFolderSync.store(false);
+                threadTimer.stop();
                 break;
             }
 
             case MENU_OPTIONS::END: {
-                threadRun.store(false);
+                threadTimer.stopThread();
                 std::cout << "End" << std::endl;
                 break;
             }
@@ -84,19 +86,15 @@ void runDiff() {
 
 int main() {
     {
-        std::thread runDiffThread(runDiff);
+//        std::thread runDiffThread(runDiff);
 
         //You can add more observers to the observed folder!
         observedFolder.registerObserver(&observerFolder);
         observedFolder.registerObserver(&observerFolder2);
 
-        //Make global observer for all folders
-//    observedFolder.registerObserver(&globalObserver);
-
-        //display menu in infinite loop
-//        ThreadTimer<ObservedFolder> threadTimer(&ObservedFolder::checkForChanges); //TODO: FIX TIMER and std::function
         mainMenu(observedFolder);
-        runDiffThread.join();
+//        runDiffThread.join();
+
     }
 
     return 0;
