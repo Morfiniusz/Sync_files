@@ -107,6 +107,8 @@ int main() {
 //        observedFolder.registerObserver(&observerFolder);
 //        observedFolder.registerObserver(&observerFolder2);
 
+
+
         for (auto folder: syncFolders) {
             for (auto otherFolder: syncFolders) {
                 if (folder != otherFolder) {
