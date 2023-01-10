@@ -9,11 +9,14 @@
 #include <functional>
 #include <atomic>
 #include <thread>
+#include "ObservedFolder.h"
+#include "ObserverFolder.h"
 
-template<typename T>
 class ThreadTimer {
 public:
-    ThreadTimer(std::function<const T&> fun);
+
+    ThreadTimer(std::function<void()> &&f);
+
     ~ThreadTimer();
 
     void runDiff();
@@ -22,27 +25,13 @@ public:
 
     void stop();
 
+    void stopThread();
+
 private:
-    std::atomic<bool> synchronization{false};
-    std::atomic<bool> threadRun{true};
-    std::function<T> fun_;
+    std::function<void()> fun_;
     std::thread worker;
+    std::atomic<bool> enableThreadFun{false};
+    std::atomic<bool> enableThreadRun{true};
 };
-
-template<typename T>
-void ThreadTimer<T>::runDiff() {
-    while (threadRun) {
-        if (synchronization) {
-            fun_();
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-}
-
-template<typename T>
-ThreadTimer<T>::ThreadTimer(std::function<const T&> fun) : fun_(fun) {
-
-}
-
 
 #endif //SYNC_FILES_THREADTIMER_H
