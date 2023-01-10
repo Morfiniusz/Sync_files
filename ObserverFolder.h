@@ -8,6 +8,7 @@
 
 #include <string>
 #include <filesystem>
+#include <mutex>
 #include "Observer.h"
 #include "ObservedFolder.h"
 
@@ -20,6 +21,7 @@ public:
 
 private:
     std::filesystem::path folderPath_;
+    std::mutex mutex_;
 //    std::filesystem::file_time_type sourceTimePrevious{std::filesystem::file_time_type::min()};
 };
 
