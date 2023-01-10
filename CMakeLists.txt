@@ -13,7 +13,8 @@ set(Observer
         ObserverFolder.h
         ThreadTimer.cpp
         ThreadTimer.h
-        )
+        SyncFolder.cpp
+        SyncFolder.h)
 
 add_executable(${PROJECT_NAME} main.cpp ${Observer})
 target_compile_options(${PROJECT_NAME} PRIVATE ${FLAGS})

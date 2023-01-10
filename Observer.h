@@ -11,7 +11,7 @@
 
 class Observer {
 public:
-    virtual void update() = 0;
+    virtual void update(std::filesystem::path &observedPath) = 0;
 };
 
 #endif //SYNC_FILES_OBSERVER_H
