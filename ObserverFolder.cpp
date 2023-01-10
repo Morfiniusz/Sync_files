@@ -12,10 +12,6 @@ ObserverFolder::ObserverFolder(const std::filesystem::path &folderPath) :
 }
 
 void ObserverFolder::update(std::filesystem::path &observedPath) {
-    //mutex
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    //get last folde-r name only
 
     std::cout << "Folder sync begin IN folder: \t" << observedPath.filename() << std::endl;
     std::cout << "Folder sync begin FOR folder: \t" << folderPath_.filename() << std::endl;
