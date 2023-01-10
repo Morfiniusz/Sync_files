@@ -8,3 +8,4 @@ Test/TestFolder/DestinationFolder2/*
 /.idea/*
 *.xml
 *.txt
+/cmake-build-release-mingw/

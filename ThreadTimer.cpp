@@ -22,11 +22,11 @@ void ThreadTimer::runDiff() {
     }
 }
 
-void ThreadTimer::start() {
+void ThreadTimer::startThreadFun() {
     enableThreadFun.store(true);
 }
 
-void ThreadTimer::stop() {
+void ThreadTimer::stopThreadFun() {
     enableThreadFun.store(false);
 }
 

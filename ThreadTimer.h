@@ -21,9 +21,9 @@ public:
 
     void runDiff();
 
-    void start();
+    void startThreadFun();
 
-    void stop();
+    void stopThreadFun();
 
     void stopThread();
 

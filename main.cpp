@@ -52,12 +52,12 @@ void mainMenu(ObservedFolder &observedFolderObj) {
             }
 
             case MENU_OPTIONS::AUTO_SYNC_ON: {
-                threadTimer.start();
+                threadTimer.startThreadFun();
                 break;
             }
 
             case MENU_OPTIONS::AUTO_SYNC_OFF: {
-                threadTimer.stop();
+                threadTimer.stopThreadFun();
                 break;
             }
 
