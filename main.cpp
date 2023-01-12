@@ -10,8 +10,6 @@ std::atomic<bool> once = true;
 std::atomic<bool> autoFolderSync{false};
 std::atomic<bool> threadRun{true};
 
-std::mutex mutexDiffrenceFun;
-
 enum class MENU_OPTIONS {
     SYNC_ONCE = 1,
     AUTO_SYNC_ON,
@@ -86,15 +84,10 @@ void runDiff() {
 
 int main() {
     {
-//        std::thread runDiffThread(runDiff);
-
         //You can add more observers to the observed folder!
         observedFolder.registerObserver(&observerFolder);
         observedFolder.registerObserver(&observerFolder2);
-
         mainMenu(observedFolder);
-//        runDiffThread.join();
-
     }
 
     return 0;
