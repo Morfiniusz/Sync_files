@@ -24,12 +24,6 @@ public:
     //Check if sth has changed in observed folder
     void checkForChanges();
 
-    void autoCheckForChangesStart();
-
-    void autoCheckForChangesStop();
-
-    void infiniteCheckForChanges();
-
     void notifyObservers();
 
     std::filesystem::path getFolderPath() const;
