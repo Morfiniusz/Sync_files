@@ -3,32 +3,36 @@
 //
 
 #include <string>
-#include <filesystem>
+#include <iostream>
 #include <fstream>
-#include "FileCheck.h"
+#include <algorithm>
+#include <openssl/md5.h>
 
-namespace fs = std::filesystem;
+std::string GetMD5(const std::string& filePath)
+{
+    unsigned char result[MD5_DIGEST_LENGTH]; // 16 bytes = 128 bits. Length of the control sum
+    MD5_CTX mdContext;  //Is a structure that is used for computing and storing MD5 message digest.
+    std::ifstream fileStream(filePath, std::ios::binary); 
 
-FileCheck::FileCheck(const fs::path &folderPath) {
-    // Get the MD5 file path
-    fs::path md5file = folderPath / "MD5_CHECKSUM";	
-
-    // Check if the checksum file exists in the folder
-    if (fs::exists(md5file)) {
-
-        //Open the MD5 file
-        std::ifstream md5fstream(md5file, std::ios::binary);
-        std::string buffer;
-        while (std::getline(md5fstream, buffer)) {
-            //Split the string by ',' and store the first part into fileName
-            std::string fileName = buffer.substr(0, buffer.find(','));
-            //Store the second part into hashValue
-            std::string hashValue = buffer.substr(buffer.find(',') + 1);
-
-            // Add the file name and hash value to the map
-            m_map[fileName] = hashValue;
+    if (fileStream) {
+        MD5_Init(&mdContext);
+        char buffer[1024];
+        while (size_t s = fileStream.read(buffer, sizeof (buffer)).gcount()) {
+            MD5_Update(&mdContext, buffer, s);
         }
+        unsigned char digest[MD5_DIGEST_LENGTH];
+        MD5_Final(result, &mdContext); 
+        fileStream.close();
+    } else {
+        std::cerr << "unable to open: "<< filePath << std::endl;
+        return 0;
     }
+    char hexResult[2*MD5_DIGEST_LENGTH+1];
+    int i;
+    for (i=0; i<MD5_DIGEST_LENGTH; i++) {
+        sprintf(&hexResult[2*i], "%02x", result[i]);
+    }
+    return std::string(hexResult);
 }
 
 
