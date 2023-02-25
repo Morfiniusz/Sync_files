@@ -121,7 +121,6 @@ int main() {
         }
 
         mainMenu(threadTimers);
-
     }
 
     return 0;
