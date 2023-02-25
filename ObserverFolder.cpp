@@ -4,28 +4,26 @@
 
 #include <filesystem>
 #include <iostream>
+#include <mutex>
 #include "ObserverFolder.h"
 
 
-ObserverFolder::ObserverFolder(const std::filesystem::path &folderPath, ObservedFolder *observedFolder) :
-        observedFolder_(observedFolder),
+ObserverFolder::ObserverFolder(const std::filesystem::path &folderPath) :
         folderPath_(folderPath) {
 }
 
-void ObserverFolder::update() {
-    //mutex
-    std::lock_guard<std::mutex> lock(mutex_);
+void ObserverFolder::update(std::filesystem::path &observedPath) {
 
-    std::cout << "Folder sync begin in OBSERVER!!! for folder: \n" << folderPath_ << std::endl;
-
+    std::cout << "Folder sync begin IN folder: \t" << observedPath.filename() << std::endl;
+    std::cout << "Folder sync begin FOR folder: \t" << folderPath_.filename() << std::endl;
     //TODO: make it async for every 'entry'
-    for (auto &entry: std::filesystem::recursive_directory_iterator(observedFolder_->getFolderPath())) {
-        std::cout << "entry.path()" << entry.path() << std::endl;
+    for (auto &entry: std::filesystem::recursive_directory_iterator(observedPath)) {
+//        std::cout << "entry.path()" << entry.path() << std::endl;
 
         //Works only for folders
         if (entry.is_directory()) {
             auto path = entry.path();
-            auto relativePath = std::filesystem::relative(path, observedFolder_->getFolderPath());
+            auto relativePath = std::filesystem::relative(path, observedPath);
             auto destinationPathForCheck = this->folderPath_ / relativePath;
             if (!std::filesystem::exists(destinationPathForCheck)) {
                 std::cout << "Destination folderPath_ doesn't exist" << std::endl;
@@ -38,7 +36,7 @@ void ObserverFolder::update() {
             }
         } else {
             auto path = entry.path();
-            auto relativePath = std::filesystem::relative(path, observedFolder_->getFolderPath());
+            auto relativePath = std::filesystem::relative(path, observedPath);
             auto destinationPathForCheck = this->folderPath_ / relativePath;
             if (!std::filesystem::exists(destinationPathForCheck)) {
                 std::cout << "Destination file doesn't exist" << std::endl;
@@ -51,5 +49,5 @@ void ObserverFolder::update() {
             }
         }
     }
-    std::cout << "Folder sync ended in OBSERVER!!!for folder: \n" << folderPath_ << std::endl << std::endl;
+    std::cout << "Folder sync ended in OBSERVER!!! \n" << std::endl << std::endl;
 }

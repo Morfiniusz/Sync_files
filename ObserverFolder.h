@@ -8,24 +8,21 @@
 
 #include <string>
 #include <filesystem>
+#include <mutex>
 #include "Observer.h"
 #include "ObservedFolder.h"
 
 class ObserverFolder : public Observer {
 public:
-    ObserverFolder(const std::filesystem::path &folderPath, ObservedFolder *observedFolder);
+    ObserverFolder(const std::filesystem::path &folderPath);
 
     /// \brief Do folder synchronization here
-    void update() override;
+    void update(std::filesystem::path &observedPath) override;
 
 private:
-    ObservedFolder *observedFolder_;
     std::filesystem::path folderPath_;
-
     std::mutex mutex_;
-
-    bool once{true};
-    std::filesystem::file_time_type sourceTimePrevious{std::filesystem::file_time_type::min()};
+//    std::filesystem::file_time_type sourceTimePrevious{std::filesystem::file_time_type::min()};
 };
 
 

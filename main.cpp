@@ -4,11 +4,14 @@
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
 #include "ThreadTimer.h"
+#include "SyncFolder.h"
 
 
 std::atomic<bool> once = true;
 std::atomic<bool> autoFolderSync{false};
 std::atomic<bool> threadRun{true};
+
+std::mutex mutexDiffrenceFun;
 
 enum class MENU_OPTIONS {
     SYNC_ONCE = 1,
@@ -23,10 +26,15 @@ const std::filesystem::path destinationPath = currentPath.parent_path() / "Test/
 const std::filesystem::path destinationPath2 = currentPath.parent_path() / "Test/TestFolder/DestinationFolder2";
 
 ObservedFolder observedFolder(sourcePath);
-ObserverFolder observerFolder(destinationPath, &observedFolder);
-ObserverFolder observerFolder2(destinationPath2, &observedFolder);
+ObserverFolder observerFolder(destinationPath);
+ObserverFolder observerFolder2(destinationPath2);
 
-ThreadTimer threadTimer([]() { observedFolder.checkForChanges(); });
+auto syncFolder1 = std::make_shared<SyncFolder>(sourcePath);
+auto syncFolder2 = std::make_shared<SyncFolder>(destinationPath);
+auto syncFolder3 = std::make_shared<SyncFolder>(destinationPath2);
+
+std::vector<std::shared_ptr<SyncFolder>> syncFolders{syncFolder1, syncFolder2, syncFolder3};
+std::vector<std::shared_ptr<ThreadTimer>> threadTimers;
 
 void displayMenu() {
     std::cout << "1. Run sync once" << std::endl;
@@ -35,7 +43,7 @@ void displayMenu() {
     std::cout << "4. End" << std::endl;
 }
 
-void mainMenu(ObservedFolder &observedFolderObj) {
+void mainMenu(std::vector<std::shared_ptr<ThreadTimer>> threadTimersParam) {
     int option = 0;
     MENU_OPTIONS menuOptions{};
     while (menuOptions != MENU_OPTIONS::END) {
@@ -45,22 +53,30 @@ void mainMenu(ObservedFolder &observedFolderObj) {
         menuOptions = static_cast<MENU_OPTIONS>(option);
         switch (menuOptions) {
             case MENU_OPTIONS::SYNC_ONCE: {
-                observedFolderObj.notifyObservers();
+                syncFolder1->notifyObservers();
+                syncFolder2->notifyObservers();
+                syncFolder3->notifyObservers();
                 break;
             }
 
             case MENU_OPTIONS::AUTO_SYNC_ON: {
-                threadTimer.startThreadFun();
+                for (auto &threadTimer: threadTimersParam) {
+                    threadTimer->startThreadFun();
+                }
                 break;
             }
 
             case MENU_OPTIONS::AUTO_SYNC_OFF: {
-                threadTimer.stopThreadFun();
+                for (auto &threadTimer: threadTimersParam) {
+                    threadTimer->stopThreadFun();
+                }
                 break;
             }
 
             case MENU_OPTIONS::END: {
-                threadTimer.stopThread();
+                for (auto &threadTimer: threadTimersParam) {
+                    threadTimer->stopThread();
+                }
                 std::cout << "End" << std::endl;
                 break;
             }
@@ -76,7 +92,9 @@ void mainMenu(ObservedFolder &observedFolderObj) {
 void runDiff() {
     while (threadRun) {
         if (autoFolderSync) {
-            observedFolder.checkForChanges();
+            syncFolder1->checkForChanges();
+            syncFolder2->checkForChanges();
+            syncFolder3->checkForChanges();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
@@ -84,10 +102,26 @@ void runDiff() {
 
 int main() {
     {
+
         //You can add more observers to the observed folder!
-        observedFolder.registerObserver(&observerFolder);
-        observedFolder.registerObserver(&observerFolder2);
-        mainMenu(observedFolder);
+//        observedFolder.registerObserver(&observerFolder);
+//        observedFolder.registerObserver(&observerFolder2);
+
+        for (auto folder: syncFolders) {
+            for (auto otherFolder: syncFolders) {
+                if (folder != otherFolder) {
+                    folder->registerObserver(otherFolder.get());
+                }
+            }
+        }
+
+        for (auto &syncFolder: syncFolders) {
+            threadTimers.emplace_back(
+                    std::make_shared<ThreadTimer>([&syncFolder]() { syncFolder->checkForChanges(); }));
+        }
+
+        mainMenu(threadTimers);
+
     }
 
     return 0;

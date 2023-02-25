@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(FLAGS -Wall -Wpedantic -Werror -Wconversion -Wextra -O3)
+find_package(Threads REQUIRED)
 
 set(Observer
         ObservedFolder.cpp
@@ -13,7 +14,9 @@ set(Observer
         ObserverFolder.h
         ThreadTimer.cpp
         ThreadTimer.h
-        )
+        SyncFolder.cpp
+        SyncFolder.h)
 
 add_executable(${PROJECT_NAME} main.cpp ${Observer})
 target_compile_options(${PROJECT_NAME} PRIVATE ${FLAGS})
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
