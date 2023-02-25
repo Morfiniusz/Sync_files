@@ -9,3 +9,5 @@ Test/TestFolder/DestinationFolder2/*
 *.xml
 *.txt
 /cmake-build-release-mingw/
+.vscode/
+build/

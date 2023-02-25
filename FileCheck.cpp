@@ -15,6 +15,7 @@ FileCheck::FileCheck(const fs::path &folderPath) {
 
     // Check if the checksum file exists in the folder
     if (fs::exists(md5file)) {
+
         //Open the MD5 file
         std::ifstream md5fstream(md5file, std::ios::binary);
         std::string buffer;
