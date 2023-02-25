@@ -15,14 +15,18 @@ std::string GetMD5(const std::string& filePath)
     std::ifstream fileStream(filePath, std::ios::binary); 
 
     if (fileStream) {
-        MD5_Init(&mdContext);
+        MD5_Init(&mdContext); //Initialize the MD5_CTX structure. Hashing starts with this function.
         char buffer[1024];
+
+        // Read file in chunks of 1024 bytes and update the control sum
         while (size_t s = fileStream.read(buffer, sizeof (buffer)).gcount()) {
             MD5_Update(&mdContext, buffer, s);
         }
+
         unsigned char digest[MD5_DIGEST_LENGTH];
         MD5_Final(result, &mdContext); 
         fileStream.close();
+        
     } else {
         std::cerr << "unable to open: "<< filePath << std::endl;
         return 0;
