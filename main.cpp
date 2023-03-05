@@ -102,6 +102,12 @@ void runDiff() {
     }
 }
 
+
+//TODO: Thread pool - Bart
+//TODO: State compare - Lukasz
+//TODO: Scan folder - Marci
+
+//TODO: Action decision maker?
 int main() {
     FileCheck fileCheck;
     std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
