@@ -105,22 +105,23 @@ int main() {
     FileCheck fileCheck;
     std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
     std::cout << "MD5: " << fileCheck.getMD5(md5Path) << std::endl;
-    // {
-    //     for (auto folder: syncFolders) {
-    //         for (auto otherFolder: syncFolders) {
-    //             if (folder != otherFolder) {
-    //                 folder->registerObserver(otherFolder.get());
-    //             }
-    //         }
-    //     }
 
-    //     for (auto &syncFolder: syncFolders) {
-    //         threadTimers.emplace_back(
-    //                 std::make_shared<ThreadTimer>([&syncFolder]() { syncFolder->checkForChanges(); }));
-    //     }
+    {
+        for (auto folder: syncFolders) {
+            for (auto otherFolder: syncFolders) {
+                if (folder != otherFolder) {
+                    folder->registerObserver(otherFolder.get());
+                }
+            }
+        }
 
-    //     mainMenu(threadTimers);
-    // }
+        for (auto &syncFolder: syncFolders) {
+            threadTimers.emplace_back(
+                    std::make_shared<ThreadTimer>([&syncFolder]() { syncFolder->checkForChanges(); }));
+        }
+
+        mainMenu(threadTimers);
+    }
 
     return 0;
 }
