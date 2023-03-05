@@ -5,14 +5,20 @@
 #ifndef SYNC_FILES_FILECHECK_H
 #define SYNC_FILES_FILECHECK_H
 
-using fs = std::filesystem
-
+#include <string>
+#include <filesystem>
+#include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <openssl/md5.h>
 
 class FileCheck {
 public:
-    FileCheck(const std::filesystem::path &folderPath);
     //add md5 file checking
+    std::string getMD5(const std::filesystem::path& filePath);
 
+    private:
+    std::filesystem::path folderPath;
 };
 
 
