@@ -110,10 +110,29 @@ void runDiff() {
 //TODO: Action decision maker?
 int main() {
     FileCheck fileCheck;
-    std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
+    // std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
+    std::filesystem::path md5Path("../Test/TestFolder/MasterFolder/md5.txt");
     std::cout << "MD5: " << fileCheck.getMD5(md5Path) << std::endl;
 
     auto vec = scanFolder(sourcePath);
+
+    std::cout << "vec.size: " << vec.size() << std::endl;
+
+
+    for( auto& item : vec )
+    {
+        std::cout << "path: " << item.filePath << std::endl;
+
+        // std::time_t cftime = decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime);
+        std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(std::filesystem::file_time_type::clock::time_point(item.modyficationTime)));
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&cftime), "%Y-%m-%d %X");
+        std::cout << "modyficationTime: " << ss.str() << std::endl;
+
+        // std::cout << "modyficationTime: " << decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime) << std::endl;
+        std::cout << "md5: " << item.md5Sum << std::endl;
+        std::cout << "---" << std::endl;
+    }
 
 
     // {

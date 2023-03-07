@@ -4,7 +4,7 @@ project(Sync_files)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(FLAGS -Wall -Wpedantic -Werror -Wconversion -Wextra -O3)
+set(FLAGS -Wall -Wpedantic -Werror -Wconversion -Wextra -g)
 find_package(Threads REQUIRED)
 
 set(Observer
