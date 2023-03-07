@@ -21,25 +21,10 @@ public:
     ThreadPool(int numThreads);
 
     // Dodanie zadania do kolejki
-    void enqueueTask(function<void(string)> func, string arg) {
-        { // Zablokowanie sekcji krytycznej
-            unique_lock<mutex> lock(queue_mutex);
-            tasks.emplace(Task{ func, arg });
-        } // Odblokowanie sekcji krytycznej
-        condition.notify_one();
-    }
+    void enqueueTask(function<void(string)> func, string arg);
 
     // Destruktor
-    ~ThreadPool() {
-        { // Zablokowanie sekcji krytycznej
-            unique_lock<mutex> lock(queue_mutex);
-            stop = true;
-        } // Odblokowanie sekcji krytycznej
-        condition.notify_all();
-        for (auto& thread : threads) {
-            thread.join();
-        }
-    }
+    ~ThreadPool();
 
 private:
     vector<thread> threads; // Wektor wątków
