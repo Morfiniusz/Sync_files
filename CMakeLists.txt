@@ -17,7 +17,10 @@ set(Observer
         SyncFolder.cpp
         SyncFolder.h
         FileCheck.cpp
-        FileCheck.h)
+        FileCheck.h
+        ThreadManager.cpp
+        ThreadManager.h
+        )
 
 add_executable(${PROJECT_NAME} main.cpp ${Observer})
 target_compile_options(${PROJECT_NAME} PRIVATE ${FLAGS})
