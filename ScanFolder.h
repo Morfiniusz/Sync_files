@@ -6,6 +6,7 @@
 
 
 struct ScanItem {
+    std::string fileName;
     std::filesystem::path filePath;
     std::filesystem::file_time_type modyficationTime;
     std::string md5Sum;

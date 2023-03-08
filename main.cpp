@@ -121,16 +121,17 @@ int main() {
 
     for( auto& item : vec )
     {
-        std::cout << "path: " << item.filePath << std::endl;
+        std::cout << "File name: " << item.fileName << std::endl;
+        std::cout << "File path: " << item.filePath << std::endl;
 
         // std::time_t cftime = decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime);
         std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(std::filesystem::file_time_type::clock::time_point(item.modyficationTime)));
         std::stringstream ss;
         ss << std::put_time(std::localtime(&cftime), "%Y-%m-%d %X");
-        std::cout << "modyficationTime: " << ss.str() << std::endl;
+        std::cout << "File modification time: " << ss.str() << std::endl;
 
         // std::cout << "modyficationTime: " << decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime) << std::endl;
-        std::cout << "md5: " << item.md5Sum << std::endl;
+        std::cout << "File md5: " << item.md5Sum << std::endl;
         std::cout << "---" << std::endl;
     }
 
