@@ -103,9 +103,22 @@ void runDiff() {
 }
 
 int main() {
-    ThreadPool threadPool(4);
+    std::cout << "Thread pool test" << std::endl;
+    ThreadPool threadPool(2);
 
-//
+    std::cout<< "Enqueue tasks1" << std::endl;
+    threadPool.enqueueTask([](string arg) {
+        std::cout << "My function1" << arg << std::endl;
+    }, " 'myArg1' ");
+
+    std::cout<< "Enqueue tasks2" << std::endl;
+    threadPool.enqueueTask([](string arg) {
+        std::cout << "My function2" << arg << std::endl;
+    }, " 'myArg2' ");
+
+    std::cout << "Time for execution!" << std::endl;
+    threadPool.executeTasks();
+
 //    {
 //        for (auto folder: syncFolders) {
 //            for (auto otherFolder: syncFolders) {
