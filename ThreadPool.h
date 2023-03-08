@@ -18,11 +18,12 @@ struct Task {
 // Klasa ThreadPool
 class ThreadPool {
 public:
+    // Konstruktor tutaj deklaruje ile wątków ma być w puli
     ThreadPool(int numThreads);
 
     // Dodanie zadania do kolejki
     void enqueueTask(function<void(string)> func, string arg);
-
+    void executeTasks();
     // Destruktor
     ~ThreadPool();
 
