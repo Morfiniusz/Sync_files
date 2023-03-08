@@ -18,8 +18,8 @@ set(Observer
         SyncFolder.h
         FileCheck.cpp
         FileCheck.h
-        ThreadManager.cpp
-        ThreadManager.h
+        ThreadPool.cpp
+        ThreadPool.h
         )
 
 add_executable(${PROJECT_NAME} main.cpp ${Observer})

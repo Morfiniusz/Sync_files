@@ -1,4 +1,4 @@
-#include "ThreadManager.h"
+#include "ThreadPool.h"
 
 ThreadPool::ThreadPool(int numThreads) : stop(false) {
     for (int i = 0; i < numThreads; i++) {
@@ -31,4 +31,8 @@ void ThreadPool::enqueueTask(function<void(string)> func, string arg) {
         tasks.emplace(Task{func, arg});
     } // Odblokowanie sekcji krytycznej
     condition.notify_one();
+}
+
+ThreadPool::~ThreadPool() {
+
 }
