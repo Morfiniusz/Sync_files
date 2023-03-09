@@ -3,44 +3,43 @@
 ThreadPool::ThreadPool(int numThreads) : stop(false) {
     std::cout << "ThreadPool constructor" << std::endl;
     for (int i = 0; i < numThreads; i++) {
-        std::cout << "Create thread" << std::endl;
+        std::cout << "[Thread] Create thread" << std::endl;
         threads.emplace_back([this] {
-            std::cout << "Thread start" << std::endl;
+            std::cout << "[Thread] start" << std::endl;
             while (true) {
-                std::cout<<"[wait] Thread while"<<std::endl;
+                std::cout << "[wait] [Thread] while" << std::endl;
                 Task task;
                 { // Zablokowanie sekcji krytycznej
                     unique_lock<mutex> lock(queue_mutex);
-                    std::cout<<"[wait] Thread unique_lock"<<std::endl;
+                    std::cout << "[wait] [Thread] unique_lock" << std::endl;
 
                     ///wait - oczekuje na sygnał od zmiennej condition
                     ///lambda - warunek sprawdzany przed każdym wybudzeniem
                     ///jeśli warunek jest spełniony to wychodzi z wait
                     ///jeśli warunek nie jest spełniony to odblokowuje mutex i czeka na sygnał
-                    std::cout<<"[wait] Thread wait"<<std::endl;
+                    std::cout << "[wait] [Thread] wait" << std::endl;
                     condition.wait(lock, [this] { return stop || !tasks.empty(); });
 
-                    std::cout<<"[wait] Thread wait end"<<std::endl;
+                    std::cout << "[wait] [Thread] wait end" << std::endl;
                     if (stop && tasks.empty()) {
                         return;
                     }
 
-                    std::cout<<"Thread move"<<std::endl;
+                    std::cout << "[Thread] move" << std::endl;
                     //zdejmowania z kolejki i przypisywania do zmiennej task
                     task = std::move(tasks.front());
 
-                    std::cout<<"Thread pop"<<std::endl;
+                    std::cout << "[Thread] pop" << std::endl;
                     //usuwanie z kolejki
                     tasks.pop();
 
                 } // Odblokowanie sekcji krytycznej
-                std::cout<<"Thread execute"<<std::endl;
+                std::cout << "[Thread] execute" << std::endl;
                 task.func(task.arg);
             }
         });
     }
 }
-
 
 void ThreadPool::enqueueTask(function<void(string)> func, string arg) {
     { // Zablokowanie sekcji krytycznej
@@ -61,29 +60,34 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::executeTasks() {
     while (true) {
-        std::cout<<"[Execute] lock"<<std::endl;
+        std::cout << "[Execute] lock" << std::endl;
         unique_lock<mutex> lock(queue_mutex);
 
-        std::cout<<"[Execute] wait"<<std::endl;
+        std::cout << "[Execute] notify_one !!!" << std::endl;
         condition.notify_one();
 
         while (!stop && tasks.empty()) {
             //Czekanie na zadanie do wykonania i odblokowanie
+            std::cout << "[Execute] wait" << std::endl;
             condition.wait(lock);
         }
 
         //Jak stop jest true i kolejka jest pusta to zatrzymujemy wątki
         if (stop && tasks.empty()) {
+            std::cout << "[Execute] stop and return" << std::endl;
             return;
         }
 
         //zdejmowanie pierwszego elementu z kolejki
+        std::cout << "[Execute] pop" << std::endl;
 //        condition.notify_one();
         Task task = tasks.front();
         tasks.pop();
 
         //odblokowanie mutexa przed wykonaniem zadania(tutaj funkcji) aby inne wątki mogły dodać zadania
+        std::cout << "[Execute] unlock" << std::endl;
         lock.unlock();
+        std::cout << "[Execute] execute" << std::endl;
         task.func(task.arg);
     }
 }
