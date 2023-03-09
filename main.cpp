@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <iostream>
 #include <filesystem>
 #include <future>
+#include <ranges>
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
 #include "ThreadTimer.h"
@@ -102,23 +104,7 @@ void runDiff() {
     }
 }
 
-
-//TODO: Thread pool - Bart
-//TODO: State compare - Lukasz
-//TODO: Scan folder - Marci
-
-//TODO: Action decision maker?
-int main() {
-    FileCheck fileCheck;
-    // std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
-    std::filesystem::path md5Path("../Test/TestFolder/MasterFolder/md5.txt");
-    std::cout << "MD5: " << fileCheck.getMD5(md5Path) << std::endl;
-
-    auto vec = scanFolder(sourcePath);
-
-    std::cout << "vec.size: " << vec.size() << std::endl;
-
-
+void printVec(const std::vector<ScanItem>& vec) {
     for( auto& item : vec )
     {
         std::cout << "File name: " << item.fileName << std::endl;
@@ -134,6 +120,54 @@ int main() {
         std::cout << "File md5: " << item.md5Sum << std::endl;
         std::cout << "---" << std::endl;
     }
+}
+
+enum class ErrorCode {
+    File_Not_Exist_make_copy = 0
+    , File_Exist_replace
+    , File_Exist_dont_replace
+};
+
+ErrorCode stateCompare(const std::vector<ScanItem>& vec1, const std::vector<ScanItem>& vec2) {
+    auto compareName = std::ranges::equal(vec1, vec2,[](const ScanItem& item1, const ScanItem& item2){
+        return item1.fileName == item2.fileName;
+    });
+    if(!compareName) {
+        return ErrorCode::File_Not_Exist_make_copy;
+    }
+    return ErrorCode::File_Exist_dont_replace;
+}
+
+//TODO: Thread pool - Bart
+//TODO: State compare - Lukasz
+//TODO: Scan folder - Marci
+
+//TODO: Action decision maker?
+int main() {
+    FileCheck fileCheck;
+    // std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
+    //std::filesystem::path md5Path("../Test/TestFolder/MasterFolder/md5.txt");
+    //std::cout << "MD5: " << fileCheck.getMD5(md5Path) << std::endl;
+    auto vec = scanFolder(sourcePath);
+    auto vec2 = scanFolder(destinationPath);
+    std::cout << "vec.size: " << vec.size() << std::endl;
+    printVec(vec);
+    printVec(vec2);
+
+    ErrorCode variable = stateCompare(vec, vec2);
+    switch(variable) {
+        case ErrorCode::File_Exist_replace: {
+            std::cout << "sth2\n";
+            break;
+        }
+        case ErrorCode::File_Exist_dont_replace: {
+            std::cout << "sth3\n";
+            break;
+        }
+    }
+    
+    
+
 
 
     // {

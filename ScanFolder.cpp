@@ -21,3 +21,9 @@ std::vector<ScanItem> scanFolder(std::filesystem::path dir)
 
     return result;
 }
+
+struct Foo {
+    std::string name;
+    std::filesystem::file_time_type time;
+    std::string md5;
+};
