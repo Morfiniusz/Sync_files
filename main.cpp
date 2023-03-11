@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <future>
 #include <ranges>
+#include <vector>
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
 #include "ThreadTimer.h"
@@ -122,21 +123,76 @@ void printVec(const std::vector<ScanItem>& vec) {
     }
 }
 
+void printTime(std::filesystem::file_time_type& time) {
+    std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(std::filesystem::file_time_type::clock::time_point(time)));
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&cftime), "%Y-%m-%d %X");
+}
+
 enum class ErrorCode {
-    File_Not_Exist_make_copy = 0
+      File_Not_Exist_make_copy = 0
     , File_Exist_replace
     , File_Exist_dont_replace
 };
 
-ErrorCode stateCompare(const std::vector<ScanItem>& vec1, const std::vector<ScanItem>& vec2) {
-    auto compareName = std::ranges::equal(vec1, vec2,[](const ScanItem& item1, const ScanItem& item2){
-        return item1.fileName == item2.fileName;
+std::vector<ScanItem> findMissingItems(const std::vector<ScanItem>& vec1, const std::vector<ScanItem>& vec2) {
+    std::vector<ScanItem> diff;
+    std::set_difference(begin(vec1), end(vec1), begin(vec2), end(vec2), std::back_inserter(diff), [](const auto& item1, const auto& item2){
+        return item1.fileName < item2.fileName;
     });
-    if(!compareName) {
-        return ErrorCode::File_Not_Exist_make_copy;
-    }
-    return ErrorCode::File_Exist_dont_replace;
+    return diff;
 }
+
+void copyItems(const std::vector<ScanItem>& vec1, std::vector<ScanItem>& vec2) {
+    std::copy(begin(vec1), end(vec1), std::back_inserter(vec2));
+}
+
+
+void stateCompare(const std::vector<ScanItem>& vec1,std::vector<ScanItem>& vec2) {
+    std::vector<ScanItem> diff;
+    if (vec1.size() != vec2.size()) {
+        // Znalezienie brakujących plików 
+        diff = findMissingItems(vec1, vec2);
+        // Kopiowanie elementu do wektora / folderu ...
+        copyItems(diff, vec2);
+        diff.clear();
+    }
+
+    auto lambda1 = [](const auto& lhs, const auto& rhs){
+        std::cout << lhs.fileName << " = " << rhs.fileName << '\n';
+        return std::ranges::equal(lhs.fileName, rhs.fileName);
+    };
+    auto compareName = std::ranges::equal(vec1, vec2, lambda1);
+
+    
+
+    for (const auto& el : vec2) {
+        std::cout << el.fileName << '\n';
+    }
+
+    // auto lambda2 = [](const auto& lhs, const auto& rhs){
+    //     //printTime(lhs.modyficationTime) + " = " + printTime(rhs.modyficationTime)<< '\n';
+    //     return std::ranges::equal(lhs.modyficationTime, rhs.modyficationTime);
+    // };
+    // auto compareModificationTime = std::ranges::equal(vecs..., lambda2);
+
+    // auto lambda3 = [](const auto& lhs, const auto& rhs){
+    //     std::cout << lhs.md5Sum << " = " << rhs.md5Sum<< '\n';
+    //     return std::ranges::equal(lhs.md5Sum, rhs.md5Sum);
+    // };
+    // auto compareMd5Sum = std::ranges::equal(vecs..., lambda3);
+
+    // auto compareName = std::ranges::equal(vec1, vec2,[](const auto& item1, const auto& item2){
+    //     return item1.fileName == item2.fileName;
+    //});
+
+
+
+//     if(!compareName) {
+//         return ErrorCode::File_Not_Exist_make_copy;
+//     }
+//     return ErrorCode::File_Exist_dont_replace;
+ }
 
 //TODO: Thread pool - Bart
 //TODO: State compare - Lukasz
@@ -153,23 +209,19 @@ int main() {
     std::cout << "vec.size: " << vec.size() << std::endl;
     printVec(vec);
     printVec(vec2);
+    stateCompare(vec, vec2);
 
-    ErrorCode variable = stateCompare(vec, vec2);
-    switch(variable) {
-        case ErrorCode::File_Exist_replace: {
-            std::cout << "sth2\n";
-            break;
-        }
-        case ErrorCode::File_Exist_dont_replace: {
-            std::cout << "sth3\n";
-            break;
-        }
-    }
-    
-    
-
-
-
+    // ErrorCode variable = stateCompare(vec, vec2);
+    // switch(variable) {
+    //     case ErrorCode::File_Exist_replace: {
+    //         std::cout << "sth2\n";
+    //         break;
+    //     }
+    //     case ErrorCode::File_Exist_dont_replace: {
+    //         std::cout << "sth3\n";
+    //         break;
+    //     }
+    // }
     // {
     //     for (auto folder: syncFolders) {
     //         for (auto otherFolder: syncFolders) {
