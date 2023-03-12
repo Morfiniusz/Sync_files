@@ -177,7 +177,7 @@ void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
 
 void syncDirectories(const size_t& idx, std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates) {
     std::vector<ScanItem> currentVecOfItems = vecOfStates.at(idx).second;
-    const auto& currentPath = vecOfStates.at(idx).second.back().filePath.parent_path();
+    const auto& currentVecOfItemsPath = vecOfStates.at(idx).second.back().filePath.parent_path();
 
     for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
         if (idxOfVec == idx) continue;
