@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <future>
 #include <ranges>
+#include <utility>
 #include <vector>
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
@@ -25,7 +26,9 @@ enum class MENU_OPTIONS {
     END
 };
 
+
 const std::filesystem::path currentPath = std::filesystem::current_path();
+const std::filesystem::path mainFolderPath = currentPath.parent_path() / "Test/TestFolder";
 const std::filesystem::path sourcePath = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
 const std::filesystem::path destinationPath = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
 const std::filesystem::path destinationPath2 = currentPath.parent_path() / "Test/TestFolder/DestinationFolder2";
@@ -129,70 +132,77 @@ void printTime(std::filesystem::file_time_type& time) {
     ss << std::put_time(std::localtime(&cftime), "%Y-%m-%d %X");
 }
 
-enum class ErrorCode {
-      File_Not_Exist_make_copy = 0
-    , File_Exist_replace
-    , File_Exist_dont_replace
-};
 
-std::vector<ScanItem> findMissingItems(const std::vector<ScanItem>& vec1, const std::vector<ScanItem>& vec2) {
-    std::vector<ScanItem> diff;
-    std::set_difference(begin(vec1), end(vec1), begin(vec2), end(vec2), std::back_inserter(diff), [](const auto& item1, const auto& item2){
-        return item1.fileName < item2.fileName;
-    });
-    return diff;
+
+
+std::vector<std::filesystem::path> pathFinder(const std::filesystem::path& mainPath) {
+    std::vector<std::filesystem::path> vecOfPaths;
+    for (std::filesystem::path path : std::filesystem::directory_iterator(mainPath)) {
+        vecOfPaths.emplace_back(path);
+    }
+    vecOfPaths.shrink_to_fit();
+    return vecOfPaths;
 }
 
-void copyItems(const std::vector<ScanItem>& vec1, std::vector<ScanItem>& vec2) {
-    std::copy(begin(vec1), end(vec1), std::back_inserter(vec2));
+std::vector<std::pair<size_t, std::vector<ScanItem>>> stateCreator(const std::vector<std::filesystem::path>& vecOfPaths) {
+    std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates;
+    size_t idx {0};
+    for (const auto& el: vecOfPaths) {
+        vecOfStates.push_back(std::make_pair(++idx, scanFolder(el)));
+    }
+    vecOfStates.shrink_to_fit();
+    return vecOfStates;
+}
+
+void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
+    for (const auto& el : vec) {
+        for (const auto& el_name : el) {
+            std::cout << "File name: " << el_name.fileName << '\n';
+        }
+    }
+}
+
+void syncDirectories(const size_t idx, std::vector<std::pair<size_t, std::vector<ScanItem>>> vec) {
+    std::vector<std::vector<ScanItem>> vecOfIdx;
+    for (const auto& el : vec) {
+        if (idx == el.first) {
+            vecOfIdx.push_back(el.second);
+        }
+    }
+    printNameofItem(vecOfIdx);
+    // for (const auto& el : vec) {
+    //     if(idx != el.first) {
+    //         auto lambda = [](auto rhs, auto lhs){
+    //             return rhs < lhs;
+    //         };
+    //         for(const auto& el2 : el.second) {
+                
+    //         }
+    //     }
+    // }
+
+
 }
 
 
-void stateCompare(const std::vector<ScanItem>& vec1,std::vector<ScanItem>& vec2) {
-    std::vector<ScanItem> diff;
-    if (vec1.size() != vec2.size()) {
-        // Znalezienie brakujących plików 
-        diff = findMissingItems(vec1, vec2);
-        // Kopiowanie elementu do wektora / folderu ...
-        copyItems(diff, vec2);
-        diff.clear();
+void printPairs (std::vector<std::pair<size_t, std::vector<ScanItem>>> vec) {
+    for(const auto& el : vec) {
+        std::cout << "-----------------------------Index: " << el.first << " ------------------------------------\n";
+        printVec(el.second);
     }
+}
 
-    auto lambda1 = [](const auto& lhs, const auto& rhs){
-        std::cout << lhs.fileName << " = " << rhs.fileName << '\n';
-        return std::ranges::equal(lhs.fileName, rhs.fileName);
-    };
-    auto compareName = std::ranges::equal(vec1, vec2, lambda1);
-
-    
-
-    for (const auto& el : vec2) {
-        std::cout << el.fileName << '\n';
+void printPaths(const std::vector<std::filesystem::path>& vec) {
+    for (const auto& el : vec) {
+        std::cout << " path: " << el << '\n';
     }
-
-    // auto lambda2 = [](const auto& lhs, const auto& rhs){
-    //     //printTime(lhs.modyficationTime) + " = " + printTime(rhs.modyficationTime)<< '\n';
-    //     return std::ranges::equal(lhs.modyficationTime, rhs.modyficationTime);
-    // };
-    // auto compareModificationTime = std::ranges::equal(vecs..., lambda2);
-
-    // auto lambda3 = [](const auto& lhs, const auto& rhs){
-    //     std::cout << lhs.md5Sum << " = " << rhs.md5Sum<< '\n';
-    //     return std::ranges::equal(lhs.md5Sum, rhs.md5Sum);
-    // };
-    // auto compareMd5Sum = std::ranges::equal(vecs..., lambda3);
-
-    // auto compareName = std::ranges::equal(vec1, vec2,[](const auto& item1, const auto& item2){
-    //     return item1.fileName == item2.fileName;
-    //});
+    std::cout << '\n';
+}
 
 
 
-//     if(!compareName) {
-//         return ErrorCode::File_Not_Exist_make_copy;
-//     }
-//     return ErrorCode::File_Exist_dont_replace;
- }
+
+
 
 //TODO: Thread pool - Bart
 //TODO: State compare - Lukasz
@@ -204,12 +214,31 @@ int main() {
     // std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
     //std::filesystem::path md5Path("../Test/TestFolder/MasterFolder/md5.txt");
     //std::cout << "MD5: " << fileCheck.getMD5(md5Path) << std::endl;
-    auto vec = scanFolder(sourcePath);
+
+    auto vec1 = scanFolder(sourcePath);
     auto vec2 = scanFolder(destinationPath);
-    std::cout << "vec.size: " << vec.size() << std::endl;
-    printVec(vec);
-    printVec(vec2);
-    stateCompare(vec, vec2);
+    auto vec3 = scanFolder(destinationPath2);
+    size_t index {0};
+    std::vector<std::filesystem::path> vecOfPaths;
+
+    std::cout << "vec.size: " << vec1.size() << std::endl;
+    // printVec(vec1);
+    // printVec(vec2);
+    //stateCompare(vec1, vec2);
+
+    vecOfPaths = pathFinder(mainFolderPath);
+    stateCreator(vecOfPaths);
+    printPairs(stateCreator(vecOfPaths));
+    syncDirectories(1, stateCreator(vecOfPaths));
+
+    
+    // std::vector<std::vector<ScanItem>> vec = stateCompare(idx, vecOfPaths);
+
+    // for (const auto & el: vec) {
+    //     printVec(el);
+    // }
+
+
 
     // ErrorCode variable = stateCompare(vec, vec2);
     // switch(variable) {
