@@ -157,7 +157,7 @@ std::vector<std::filesystem::path> pathFinder(const std::filesystem::path& mainP
     return vecOfPaths;
 }
 
-std::vector<std::pair<size_t, std::vector<ScanItem>>> stateCreator(const std::vector<std::filesystem::path>& vecOfPaths) {
+auto stateCreator(const std::vector<std::filesystem::path>& vecOfPaths) {
     std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates;
     size_t idx {0};
     for (const auto& el: vecOfPaths) {
@@ -175,23 +175,25 @@ void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
     }
 }
 
-void syncDirectories(const size_t& idx, const std::vector<std::pair<size_t, std::vector<ScanItem>>>& vec) {
-    std::vector<ScanItem> currentVecOfItems = vec.at(idx).second;
-    for (const auto& [idxOfVec, vecOfItemsToCheck] : vec) {
+void syncDirectories(const size_t& idx, std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates) {
+    std::vector<ScanItem> currentVecOfItems = vecOfStates.at(idx).second;
+    const auto& currentPath = vecOfStates.at(idx).second.back().filePath.parent_path();
+
+    for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
         if (idxOfVec == idx) continue;
 
         for (const auto& itemToCheck : vecOfItemsToCheck) {
             const auto& [itemToCheckName, itemToCheckPath, itemToCheckModificationTime, itemToCheckMd5Sum] = itemToCheck;
 
             // Check if itemToCheck exists in current dir
-            auto itemInCurrentDir = std::ranges::find_if(currentVecOfItems,
-                [&](const auto& item) { return item.fileName == itemToCheckName && item.filePath == itemToCheckPath; });
+            auto itemInCurrentDir = std::ranges::find_if(currentVecOfItems, [&](const auto& item) {
+                return item.fileName == itemToCheckName && item.filePath == currentPath / itemToCheckName;
+            });
 
             if (itemInCurrentDir == currentVecOfItems.end()) {
                 // Copy item from checked dir to current dir
-                std::filesystem::copy_file(itemToCheckPath, vec.at(idx).second.back().filePath.parent_path() / itemToCheckName,
-                    std::filesystem::copy_options::overwrite_existing);
-                currentVecOfItems.emplace_back(ScanItem{ itemToCheckName, vec.at(idx).second.back().filePath.parent_path() / itemToCheckName, itemToCheckModificationTime, itemToCheckMd5Sum });
+                std::filesystem::copy_file(itemToCheckPath, currentPath / itemToCheckName, std::filesystem::copy_options::overwrite_existing);
+                currentVecOfItems.emplace_back(ScanItem{ itemToCheckName, currentPath / itemToCheckName, itemToCheckModificationTime, itemToCheckMd5Sum });
                 std::cout << "Copied " << itemToCheckName << " from " << idxOfVec << " to " << idx << std::endl;
             }
             else {
@@ -199,17 +201,20 @@ void syncDirectories(const size_t& idx, const std::vector<std::pair<size_t, std:
                 auto currItemTime = itemInCurrentDir->modyficationTime;
                 auto& currItemMd5 = itemInCurrentDir->md5Sum;
 
-                if (currItemTime < itemToCheckModificationTime || currItemMd5 != itemToCheckMd5Sum) {
-                    // Copy item from checked dir to current dir
-                    std::filesystem::copy_file(itemToCheckPath, itemInCurrentDir->filePath, std::filesystem::copy_options::overwrite_existing);
-                    itemInCurrentDir->modyficationTime = itemToCheckModificationTime;
-                    itemInCurrentDir->md5Sum = itemToCheckMd5Sum;
-                    std::cout << "Copied " << itemToCheckName << " from " << idxOfVec << " to " << idx << std::endl;
+                if (currItemTime > itemToCheckModificationTime || currItemMd5 == itemToCheckMd5Sum) {
+                    continue; // skip if current item is newer or has the same md5 hash
                 }
+
+                // Copy item from checked dir to current dir
+                std::filesystem::copy_file(itemToCheckPath, itemInCurrentDir->filePath, std::filesystem::copy_options::overwrite_existing);
+                itemInCurrentDir->modyficationTime = itemToCheckModificationTime;
+                itemInCurrentDir->md5Sum = itemToCheckMd5Sum;
+                std::cout << "Copied " << itemToCheckName << " from " << idxOfVec << " to " << idx << std::endl;
             }
         }
     }
 }
+
 
 
 
@@ -247,7 +252,7 @@ int main() {
     vecOfPaths = pathFinder(mainFolderPath);
     stateCreator(vecOfPaths);
     //printPairs(stateCreator(vecOfPaths));
-    syncDirectories(0, stateCreator(vecOfPaths));
+    syncDirectories(1, stateCreator(vecOfPaths));
 
     
     // std::vector<std::vector<ScanItem>> vec = stateCompare(idx, vecOfPaths);
