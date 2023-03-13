@@ -4,6 +4,7 @@
 #include <future>
 #include <ranges>
 #include <utility>
+#include <unordered_map>
 #include <vector>
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
@@ -125,6 +126,12 @@ void printVec(const std::vector<ScanItem>& vec) {
     }
 }
 
+void printMap(const std::unordered_map<std::string, ScanItem>& mapOfItems) {
+    for(const auto& [key,value] : mapOfItems) {
+        std::cout << "Key: " << key << " Path: " << value.filePath.parent_path() << '\n';
+    }
+}
+
 void printTime(std::filesystem::file_time_type& time) {
     std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(std::filesystem::file_time_type::clock::time_point(time)));
     std::stringstream ss;
@@ -175,43 +182,40 @@ void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
     }
 }
 
-void syncDirectories(const size_t& idx, std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates) {
-    std::vector<ScanItem> currentVecOfItems = vecOfStates.at(idx).second;
-    const auto& currentVecOfItemsPath = vecOfStates.at(idx).second.back().filePath.parent_path();
+void syncDirectories(const size_t& idx, const std::vector<std::pair<size_t, std::vector<ScanItem>>>& vecOfStates) {
+    std::vector<ScanItem> idxVec = vecOfStates.at(idx).second;
+    const auto& idxVecPath = vecOfStates.at(idx).second.back().filePath.parent_path();
+    std::unordered_map<std::string, ScanItem> mapOfItemsToCopy; 
 
-    for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
-        if (idxOfVec == idx) continue;
-
-        for (const auto& itemToCheck : vecOfItemsToCheck) {
-            const auto& [itemToCheckName, itemToCheckPath, itemToCheckModificationTime, itemToCheckMd5Sum] = itemToCheck;
-
-            // Check if itemToCheck exists in current dir
-            auto itemInCurrentDir = std::ranges::find_if(currentVecOfItems, [&](const auto& item) {
-                return item.fileName == itemToCheckName && item.filePath == currentPath / itemToCheckName;
-            });
-
-            if (itemInCurrentDir == currentVecOfItems.end()) {
-                // Copy item from checked dir to current dir
-                std::filesystem::copy_file(itemToCheckPath, currentPath / itemToCheckName, std::filesystem::copy_options::overwrite_existing);
-                currentVecOfItems.emplace_back(ScanItem{ itemToCheckName, currentPath / itemToCheckName, itemToCheckModificationTime, itemToCheckMd5Sum });
-                std::cout << "Copied " << itemToCheckName << " from " << idxOfVec << " to " << idx << std::endl;
+    for(const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
+        if(idxOfVec == idx) continue;
+        for(const auto& item: vecOfItemsToCheck) {
+            const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
+            auto it = idxVec.begin();
+            while (it != idxVec.end()) {
+                if (it->fileName == itemName) {
+                    break;
+                }
+                ++it;
+            }
+            if(it == idxVec.end()) {
+                mapOfItemsToCopy[itemName] = item;
             }
             else {
-                // Item exists in current dir, check if it's older than itemToCheck
-                auto currItemTime = itemInCurrentDir->modyficationTime;
-                auto& currItemMd5 = itemInCurrentDir->md5Sum;
-
-                if (currItemTime > itemToCheckModificationTime || currItemMd5 == itemToCheckMd5Sum) {
-                    continue; // skip if current item is newer or has the same md5 hash
+                const auto& idxModTime = it->modyficationTime;
+                if(idxModTime < itemModTime) {
+                    mapOfItemsToCopy[itemName] = item;
                 }
-
-                // Copy item from checked dir to current dir
-                std::filesystem::copy_file(itemToCheckPath, itemInCurrentDir->filePath, std::filesystem::copy_options::overwrite_existing);
-                itemInCurrentDir->modyficationTime = itemToCheckModificationTime;
-                itemInCurrentDir->md5Sum = itemToCheckMd5Sum;
-                std::cout << "Copied " << itemToCheckName << " from " << idxOfVec << " to " << idx << std::endl;
-            }
+            } 
         }
+    }
+    printMap(mapOfItemsToCopy);
+
+    for(const auto& [name, item] : mapOfItemsToCopy) {
+        const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
+        const auto& idxFilePath = idxVecPath / itemName;
+        std::filesystem::copy_file(itemPath, idxFilePath, std::filesystem::copy_options::overwrite_existing);
+        std::cout << "Copied file " << itemName << " to " << idxFilePath << '\n';
     }
 }
 
