@@ -161,11 +161,11 @@ void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
     }
 }
 
-auto pathFinder(const size_t& idx, const std::filesystem::path& mainPath) {
+auto pathFinder(const std::filesystem::path& mainPath) {
     std::vector<std::pair<size_t,std::filesystem::path>> vecOfPaths;
-    size_t idy = idx;
+    size_t idx {0};
     for (std::filesystem::path path : std::filesystem::directory_iterator(mainPath)) {
-        vecOfPaths.emplace_back(std::make_pair(idy++, path));
+        vecOfPaths.emplace_back(std::make_pair(idx++, path));
     }
     vecOfPaths.shrink_to_fit();
     return vecOfPaths;
@@ -173,11 +173,11 @@ auto pathFinder(const size_t& idx, const std::filesystem::path& mainPath) {
 
 
 
-auto stateCreator(const size_t& idx, const std::vector<std::pair<size_t,std::filesystem::path>>& vecOfPaths) {
+auto stateCreator(const std::vector<std::pair<size_t,std::filesystem::path>>& vecOfPaths) {
     std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates;
-    size_t idz = idx;
+    size_t idy {0};
     for (const auto& el: vecOfPaths) {
-        vecOfStates.push_back(std::make_pair(idz++, scanFolder(el.second)));
+        vecOfStates.push_back(std::make_pair(idy++, scanFolder(el.second)));
     }
     vecOfStates.shrink_to_fit();
     return vecOfStates;
@@ -187,8 +187,8 @@ auto stateCreator(const size_t& idx, const std::vector<std::pair<size_t,std::fil
 
 void syncDirectories(const size_t& idx) {
 
-    std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(idx, mainFolderPath);
-    std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(idx, vecOfPaths);
+    std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(mainFolderPath);
+    std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(vecOfPaths);
 
     printPairs(vecOfStates);
 
@@ -210,8 +210,7 @@ void syncDirectories(const size_t& idx) {
                 // File not found in target directory, add to copy map
                 auto existingIt = mapOfItemsToCopy.find(itemName);
                 if (existingIt == mapOfItemsToCopy.end() || 
-                    (existingIt->second.modyficationTime < itemModTime && 
-                    existingIt->second.md5Sum != itemMd5Sum)) {
+                    (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
                     mapOfItemsToCopy[itemName] = item;
                 }
             } else {
@@ -221,8 +220,7 @@ void syncDirectories(const size_t& idx) {
                 if (idxMd5Sum != itemMd5Sum || idxModTime < itemModTime) {
                     auto existingIt = mapOfItemsToCopy.find(itemName);
                     if (existingIt == mapOfItemsToCopy.end() || 
-                        (existingIt->second.modyficationTime < itemModTime && 
-                        existingIt->second.md5Sum != itemMd5Sum)) {
+                        (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
                         mapOfItemsToCopy[itemName] = item;
                     }
                 }
@@ -237,7 +235,7 @@ void syncDirectories(const size_t& idx) {
         std::cout << "Copied file " << itemName << " from " << itemPath << " to " << idxFilePath << '\n';
     }
 
-    vecOfStates = stateCreator(idx, vecOfPaths);
+    vecOfStates = stateCreator(vecOfPaths);
     printPairs(vecOfStates);
 }
 
