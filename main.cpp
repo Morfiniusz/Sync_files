@@ -153,9 +153,15 @@ void printPaths(const std::vector<std::filesystem::path>& vec) {
 }
 
 
+void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
+    for (const auto& el : vec) {
+        for (const auto& el_name : el) {
+            std::cout << "File name: " << el_name.fileName << '\n';
+        }
+    }
+}
 
-
-std::vector<std::filesystem::path> pathFinder(const std::filesystem::path& mainPath) {
+auto pathFinder(const std::filesystem::path& mainPath) {
     std::vector<std::filesystem::path> vecOfPaths;
     for (std::filesystem::path path : std::filesystem::directory_iterator(mainPath)) {
         vecOfPaths.emplace_back(path);
@@ -174,19 +180,16 @@ auto stateCreator(const std::vector<std::filesystem::path>& vecOfPaths) {
     return vecOfStates;
 }
 
-void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
-    for (const auto& el : vec) {
-        for (const auto& el_name : el) {
-            std::cout << "File name: " << el_name.fileName << '\n';
-        }
-    }
-}
+void syncDirectories(const size_t& idx) {
 
-void syncDirectories(const size_t& idx, const std::vector<std::pair<size_t, std::vector<ScanItem>>>& vecOfStates) {
+    std::vector<std::filesystem::path> vecOfPaths = pathFinder(mainFolderPath);
+    std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(vecOfPaths);
+
     if (vecOfStates.empty() || vecOfStates.at(idx).second.empty()) {
-        std::cerr << "Vector of scan items is empty!" << std::endl;
+        std::cerr << "Vector of scan items is empty!\n";
         return;
     }
+
     std::vector<ScanItem> idxVec = vecOfStates.at(idx).second;
     const auto& idxVecPath = vecOfStates.at(idx).second.back().filePath.parent_path();
     std::unordered_map<std::string, ScanItem> mapOfItemsToCopy; 
@@ -223,18 +226,6 @@ void syncDirectories(const size_t& idx, const std::vector<std::pair<size_t, std:
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 //TODO: Thread pool - Bart
 //TODO: State compare - Lukasz
 //TODO: Scan folder - Marci
@@ -257,10 +248,10 @@ int main() {
     // printVec(vec2);
     //stateCompare(vec1, vec2);
 
-    vecOfPaths = pathFinder(mainFolderPath);
-    stateCreator(vecOfPaths);
+    //vecOfPaths = pathFinder(mainFolderPath);
+    //stateCreator(vecOfPaths);
     //printPairs(stateCreator(vecOfPaths));
-    syncDirectories(1, stateCreator(vecOfPaths));
+    syncDirectories(1);
 
     
     // std::vector<std::vector<ScanItem>> vec = stateCompare(idx, vecOfPaths);
