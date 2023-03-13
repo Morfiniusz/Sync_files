@@ -183,6 +183,10 @@ void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
 }
 
 void syncDirectories(const size_t& idx, const std::vector<std::pair<size_t, std::vector<ScanItem>>>& vecOfStates) {
+    if (vecOfStates.empty() || vecOfStates.at(idx).second.empty()) {
+        std::cerr << "Vector of scan items is empty!" << std::endl;
+        return;
+    }
     std::vector<ScanItem> idxVec = vecOfStates.at(idx).second;
     const auto& idxVecPath = vecOfStates.at(idx).second.back().filePath.parent_path();
     std::unordered_map<std::string, ScanItem> mapOfItemsToCopy; 
