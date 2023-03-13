@@ -161,20 +161,23 @@ void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
     }
 }
 
-auto pathFinder(const std::filesystem::path& mainPath) {
-    std::vector<std::filesystem::path> vecOfPaths;
+auto pathFinder(const size_t& idx, const std::filesystem::path& mainPath) {
+    std::vector<std::pair<size_t,std::filesystem::path>> vecOfPaths;
+    size_t idy = idx;
     for (std::filesystem::path path : std::filesystem::directory_iterator(mainPath)) {
-        vecOfPaths.emplace_back(path);
+        vecOfPaths.emplace_back(std::make_pair(idy++, path));
     }
     vecOfPaths.shrink_to_fit();
     return vecOfPaths;
 }
 
-auto stateCreator(const std::vector<std::filesystem::path>& vecOfPaths) {
+
+
+auto stateCreator(const size_t& idx, const std::vector<std::pair<size_t,std::filesystem::path>>& vecOfPaths) {
     std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates;
-    size_t idx {0};
+    size_t idz = idx;
     for (const auto& el: vecOfPaths) {
-        vecOfStates.push_back(std::make_pair(idx++, scanFolder(el)));
+        vecOfStates.push_back(std::make_pair(idz++, scanFolder(el.second)));
     }
     vecOfStates.shrink_to_fit();
     return vecOfStates;
@@ -182,21 +185,16 @@ auto stateCreator(const std::vector<std::filesystem::path>& vecOfPaths) {
 
 void syncDirectories(const size_t& idx) {
 
-    std::vector<std::filesystem::path> vecOfPaths = pathFinder(mainFolderPath);
-    std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(vecOfPaths);
-
-    if (vecOfStates.empty() || vecOfStates.at(idx).second.empty()) {
-        std::cerr << "Vector of scan items is empty!\n";
-        return;
-    }
+    std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(idx, mainFolderPath);
+    std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(idx, vecOfPaths);
 
     std::vector<ScanItem> idxVec = vecOfStates.at(idx).second;
-    const auto& idxVecPath = vecOfStates.at(idx).second.back().filePath.parent_path();
-    std::unordered_map<std::string, ScanItem> mapOfItemsToCopy; 
+    const auto& idxVecPath = vecOfPaths.at(idx);
+    std::unordered_map<std::string, ScanItem> mapOfItemsToCopy;
 
-    for(const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
-        if(idxOfVec == idx) continue;
-        for(const auto& item: vecOfItemsToCheck) {
+    for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
+        //if (idxOfVec == idx) continue;
+        for (const auto& item : vecOfItemsToCheck) {
             const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
             auto it = idxVec.begin();
             while (it != idxVec.end()) {
@@ -205,24 +203,23 @@ void syncDirectories(const size_t& idx) {
                 }
                 ++it;
             }
-            if(it == idxVec.end()) {
+            if (it == idxVec.end()) {
                 mapOfItemsToCopy[itemName] = item;
             }
             else {
                 const auto& idxModTime = it->modyficationTime;
-                if(idxModTime < itemModTime) {
+                if (idxModTime < itemModTime) {
                     mapOfItemsToCopy[itemName] = item;
                 }
-            } 
+            }
         }
     }
-    printMap(mapOfItemsToCopy);
 
-    for(const auto& [name, item] : mapOfItemsToCopy) {
+    for (const auto& [name, item] : mapOfItemsToCopy) {
         const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
-        const auto& idxFilePath = idxVecPath / itemName;
+        const auto& idxFilePath = idxVecPath.second / itemName;
         std::filesystem::copy_file(itemPath, idxFilePath, std::filesystem::copy_options::overwrite_existing);
-        std::cout << "Copied file " << itemName << " to " << idxFilePath << '\n';
+        std::cout << "Copied file " << itemName << " from " << itemPath << " to " << idxFilePath << '\n';
     }
 }
 
