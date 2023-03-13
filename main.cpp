@@ -183,33 +183,48 @@ auto stateCreator(const size_t& idx, const std::vector<std::pair<size_t,std::fil
     return vecOfStates;
 }
 
+
+
 void syncDirectories(const size_t& idx) {
 
     std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(idx, mainFolderPath);
     std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(idx, vecOfPaths);
 
-    std::vector<ScanItem> idxVec = vecOfStates.at(idx).second;
+    printPairs(vecOfStates);
+
+    const std::vector<ScanItem>& idxVec = vecOfStates.at(idx).second;
     const auto& idxVecPath = vecOfPaths.at(idx);
     std::unordered_map<std::string, ScanItem> mapOfItemsToCopy;
 
     for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
-        //if (idxOfVec == idx) continue;
         for (const auto& item : vecOfItemsToCheck) {
             const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
             auto it = idxVec.begin();
             while (it != idxVec.end()) {
-                if (it->fileName == itemName) {
+                if (it->fileName == itemName && it->modyficationTime == itemModTime && it->md5Sum == itemMd5Sum) {
                     break;
                 }
                 ++it;
             }
             if (it == idxVec.end()) {
-                mapOfItemsToCopy[itemName] = item;
-            }
-            else {
-                const auto& idxModTime = it->modyficationTime;
-                if (idxModTime < itemModTime) {
+                // File not found in target directory, add to copy map
+                auto existingIt = mapOfItemsToCopy.find(itemName);
+                if (existingIt == mapOfItemsToCopy.end() || 
+                    (existingIt->second.modyficationTime < itemModTime && 
+                    existingIt->second.md5Sum != itemMd5Sum)) {
                     mapOfItemsToCopy[itemName] = item;
+                }
+            } else {
+                // File found in target directory, compare modification time and md5 sum
+                const auto& idxModTime = it->modyficationTime;
+                const auto& idxMd5Sum = it->md5Sum;
+                if (idxMd5Sum != itemMd5Sum || idxModTime < itemModTime) {
+                    auto existingIt = mapOfItemsToCopy.find(itemName);
+                    if (existingIt == mapOfItemsToCopy.end() || 
+                        (existingIt->second.modyficationTime < itemModTime && 
+                        existingIt->second.md5Sum != itemMd5Sum)) {
+                        mapOfItemsToCopy[itemName] = item;
+                    }
                 }
             }
         }
@@ -221,7 +236,11 @@ void syncDirectories(const size_t& idx) {
         std::filesystem::copy_file(itemPath, idxFilePath, std::filesystem::copy_options::overwrite_existing);
         std::cout << "Copied file " << itemName << " from " << itemPath << " to " << idxFilePath << '\n';
     }
+
+    vecOfStates = stateCreator(idx, vecOfPaths);
+    printPairs(vecOfStates);
 }
+
 
 //TODO: Thread pool - Bart
 //TODO: State compare - Lukasz
