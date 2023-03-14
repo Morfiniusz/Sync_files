@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <filesystem>
 #include <future>
@@ -193,15 +194,19 @@ void syncDirectories(const size_t& idx) {
     printPairs(vecOfStates);
 
     const std::vector<ScanItem>& idxVec = vecOfStates.at(idx).second;
-    const auto& idxVecPath = vecOfPaths.at(idx);
+    const auto& idxVecPath = vecOfPaths.at(idx).second;
     std::unordered_map<std::string, ScanItem> mapOfItemsToCopy;
 
     for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
+        if (idxOfVec == idx) {
+            continue; // skip target directory
+        }
         for (const auto& item : vecOfItemsToCheck) {
             const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
             auto it = idxVec.begin();
             while (it != idxVec.end()) {
-                if (it->fileName == itemName && it->modyficationTime == itemModTime && it->md5Sum == itemMd5Sum) {
+                if (it->fileName == itemName && it->modyficationTime >= itemModTime) {
+                    std::cout << "Skipping file " << it->fileName << " in " << it->filePath << " - it's up-to-date\n";
                     break;
                 }
                 ++it;
@@ -213,24 +218,13 @@ void syncDirectories(const size_t& idx) {
                     (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
                     mapOfItemsToCopy[itemName] = item;
                 }
-            } else {
-                // File found in target directory, compare modification time and md5 sum
-                const auto& idxModTime = it->modyficationTime;
-                const auto& idxMd5Sum = it->md5Sum;
-                if (idxMd5Sum != itemMd5Sum || idxModTime < itemModTime) {
-                    auto existingIt = mapOfItemsToCopy.find(itemName);
-                    if (existingIt == mapOfItemsToCopy.end() || 
-                        (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
-                        mapOfItemsToCopy[itemName] = item;
-                    }
-                }
             }
         }
     }
 
     for (const auto& [name, item] : mapOfItemsToCopy) {
         const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
-        const auto& idxFilePath = idxVecPath.second / itemName;
+        const auto& idxFilePath = idxVecPath / itemName;
         std::filesystem::copy_file(itemPath, idxFilePath, std::filesystem::copy_options::overwrite_existing);
         std::cout << "Copied file " << itemName << " from " << itemPath << " to " << idxFilePath << '\n';
     }
