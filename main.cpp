@@ -205,8 +205,8 @@ void syncDirectories(const size_t& idx) {
             const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
             auto it = idxVec.begin();
             while (it != idxVec.end()) {
-                if (it->fileName == itemName && it->modyficationTime >= itemModTime) {
-                    std::cout << "Skipping file " << it->fileName << " in " << it->filePath << " - it's up-to-date\n";
+                if (it->fileName == itemName && it->modyficationTime >= itemModTime && it->md5Sum == itemMd5Sum) {
+                    std::cout << "Skipping file " << it->fileName << " in " << it->filePath << " " << "compared to " << " it's up-to-date\n";
                     break;
                 }
                 ++it;
@@ -221,6 +221,23 @@ void syncDirectories(const size_t& idx) {
             }
         }
     }
+
+    for (const auto& idItem : idxVec) {
+        bool found = false;
+        for (const auto& [idOfVec, vecOfItems] : vecOfStates) {
+            if (idOfVec == idx) continue;
+            if (std::ranges::any_of(vecOfItems, [&idItem](const auto& item) {return item.fileName == idItem.fileName;})) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            std::cout << "Deleted file " << idItem.fileName << " from " << idItem.filePath.parent_path() << '\n';
+            std::filesystem::remove(idItem.filePath);
+        }
+    }
+
+
 
     for (const auto& [name, item] : mapOfItemsToCopy) {
         const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
@@ -248,18 +265,11 @@ int main() {
     auto vec1 = scanFolder(sourcePath);
     auto vec2 = scanFolder(destinationPath);
     auto vec3 = scanFolder(destinationPath2);
-    //size_t index {0};
+
     std::vector<std::filesystem::path> vecOfPaths;
 
     std::cout << "vec.size: " << vec1.size() << std::endl;
-    // printVec(vec1);
-    // printVec(vec2);
-    //stateCompare(vec1, vec2);
-
-    //vecOfPaths = pathFinder(mainFolderPath);
-    //stateCreator(vecOfPaths);
-    //printPairs(stateCreator(vecOfPaths));
-    syncDirectories(1);
+    syncDirectories(0);
 
     
     // std::vector<std::vector<ScanItem>> vec = stateCompare(idx, vecOfPaths);
