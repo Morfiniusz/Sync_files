@@ -13,6 +13,7 @@
 #include "SyncFolder.h"
 #include "FileCheck.h"
 #include "ScanFolder.h"
+#include "SyncDirectories.h"
 
 
 std::atomic<bool> once = true;
@@ -110,145 +111,22 @@ void runDiff() {
     }
 }
 
-void printVec(const std::vector<ScanItem>& vec) {
-    for( auto& item : vec )
-    {
-        std::cout << "File name: " << item.fileName << std::endl;
-        std::cout << "File path: " << item.filePath << std::endl;
+// void printVec(const std::vector<ScanItem>& vec) {
+//     for( auto& item : vec )
+//     {
+//         std::cout << "File name: " << item.fileName << std::endl;
+//         std::cout << "File path: " << item.filePath << std::endl;
 
-        // std::time_t cftime = decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime);
-        std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(std::filesystem::file_time_type::clock::time_point(item.modyficationTime)));
-        std::stringstream ss;
-        ss << std::put_time(std::localtime(&cftime), "%Y-%m-%d %X");
-        std::cout << "File modification time: " << ss.str() << std::endl;
-        // std::cout << "modyficationTime: " << decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime) << std::endl;
-        std::cout << "File md5: " << item.md5Sum << std::endl;
-        std::cout << "---" << std::endl;
-    }
-}
-
-void printMap(const std::unordered_map<std::string, ScanItem>& mapOfItems) {
-    for(const auto& [key,value] : mapOfItems) {
-        std::cout << "Key: " << key << " Path: " << value.filePath.parent_path() << '\n';
-    }
-}
-
-void printTime(std::filesystem::file_time_type& time) {
-    std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(std::filesystem::file_time_type::clock::time_point(time)));
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&cftime), "%Y-%m-%d %X");
-}
-
-void printPairs (std::vector<std::pair<size_t, std::vector<ScanItem>>> vec) {
-    for(const auto& el : vec) {
-        std::cout << "-----------------------------Index: " << el.first << " ------------------------------------\n";
-        printVec(el.second);
-    }
-}
-
-void printPaths(const std::vector<std::filesystem::path>& vec) {
-    for (const auto& el : vec) {
-        std::cout << " path: " << el << '\n';
-    }
-    std::cout << '\n';
-}
-
-
-void printNameofItem(std::vector<std::vector<ScanItem>> vec) {
-    for (const auto& el : vec) {
-        for (const auto& el_name : el) {
-            std::cout << "File name: " << el_name.fileName << '\n';
-        }
-    }
-}
-
-auto pathFinder(const std::filesystem::path& mainPath) {
-    std::vector<std::pair<size_t,std::filesystem::path>> vecOfPaths;
-    size_t idx {0};
-    for (std::filesystem::path path : std::filesystem::directory_iterator(mainPath)) {
-        vecOfPaths.emplace_back(std::make_pair(idx++, path));
-    }
-    vecOfPaths.shrink_to_fit();
-    return vecOfPaths;
-}
-
-
-
-auto stateCreator(const std::vector<std::pair<size_t,std::filesystem::path>>& vecOfPaths) {
-    std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates;
-    size_t idy {0};
-    for (const auto& el: vecOfPaths) {
-        vecOfStates.push_back(std::make_pair(idy++, scanFolder(el.second)));
-    }
-    vecOfStates.shrink_to_fit();
-    return vecOfStates;
-}
-
-
-
-void syncDirectories(const size_t& idx) {
-
-    std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(mainFolderPath);
-    std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(vecOfPaths);
-
-    printPairs(vecOfStates);
-
-    const std::vector<ScanItem>& idxVec = vecOfStates.at(idx).second;
-    const auto& idxVecPath = vecOfPaths.at(idx).second;
-    std::unordered_map<std::string, ScanItem> mapOfItemsToCopy;
-
-    for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
-        if (idxOfVec == idx) {
-            continue; // skip target directory
-        }
-        for (const auto& item : vecOfItemsToCheck) {
-            const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
-            auto it = idxVec.begin();
-            while (it != idxVec.end()) {
-                if (it->fileName == itemName && it->modyficationTime >= itemModTime && it->md5Sum == itemMd5Sum) {
-                    std::cout << "Skipping file " << it->fileName << " in " << it->filePath << " " << "compared to " << " it's up-to-date\n";
-                    break;
-                }
-                ++it;
-            }
-            if (it == idxVec.end()) {
-                // File not found in target directory, add to copy map
-                auto existingIt = mapOfItemsToCopy.find(itemName);
-                if (existingIt == mapOfItemsToCopy.end() || (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
-                    mapOfItemsToCopy[itemName] = item;
-                }
-            }
-        }
-    }
-
-    for (const auto& idItem : idxVec) {
-        bool found = false;
-        for (const auto& [idOfVec, vecOfItems] : vecOfStates) {
-            if (idOfVec == idx) continue;
-            if (std::ranges::any_of(vecOfItems, [&idItem](const auto& lhs) {return lhs.fileName == idItem.fileName;})) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            std::cout << "Deleted file " << idItem.fileName << " from " << idItem.filePath.parent_path() << '\n';
-            std::filesystem::remove(idItem.filePath);
-        }
-    }
-
-
-
-    for (const auto& [name, item] : mapOfItemsToCopy) {
-        const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
-        const auto& idxFilePath = idxVecPath / itemName;
-        std::filesystem::copy_file(itemPath, idxFilePath, std::filesystem::copy_options::overwrite_existing);
-        std::cout << "Copied file " << itemName << " from " << itemPath << " to " << idxFilePath << '\n';
-    }
-
-    vecOfStates = stateCreator(vecOfPaths);
-    printPairs(vecOfStates);
-}
-
+//         // std::time_t cftime = decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime);
+//         std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(std::filesystem::file_time_type::clock::time_point(item.modyficationTime)));
+//         std::stringstream ss;
+//         ss << std::put_time(std::localtime(&cftime), "%Y-%m-%d %X");
+//         std::cout << "File modification time: " << ss.str() << std::endl;
+//         // std::cout << "modyficationTime: " << decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime) << std::endl;
+//         std::cout << "File md5: " << item.md5Sum << std::endl;
+//         std::cout << "---" << std::endl;
+//     }
+// }
 
 //TODO: Thread pool - Bart
 //TODO: State compare - Lukasz
@@ -260,7 +138,7 @@ int main() {
     // std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
     //std::filesystem::path md5Path("../Test/TestFolder/MasterFolder/md5.txt");
     //std::cout << "MD5: " << fileCheck.getMD5(md5Path) << std::endl;
-
+    SyncDirectories sync;
     auto vec1 = scanFolder(sourcePath);
     auto vec2 = scanFolder(destinationPath);
     auto vec3 = scanFolder(destinationPath2);
@@ -268,15 +146,7 @@ int main() {
     std::vector<std::filesystem::path> vecOfPaths;
 
     std::cout << "vec.size: " << vec1.size() << std::endl;
-    syncDirectories(1);
-
-    
-    // std::vector<std::vector<ScanItem>> vec = stateCompare(idx, vecOfPaths);
-
-    // for (const auto & el: vec) {
-    //     printVec(el);
-    // }
-
+    sync.syncDirectories(1);
 
 
     // ErrorCode variable = stateCompare(vec, vec2);

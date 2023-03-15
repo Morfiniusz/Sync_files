@@ -20,6 +20,8 @@ set(Observer
         FileCheck.h
         ScanFolder.h
         ScanFolder.cpp
+        SyncDirectories.cpp
+        SyncDirectories.h
         )
 
 add_executable(${PROJECT_NAME} main.cpp ${Observer})
