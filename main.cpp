@@ -214,8 +214,7 @@ void syncDirectories(const size_t& idx) {
             if (it == idxVec.end()) {
                 // File not found in target directory, add to copy map
                 auto existingIt = mapOfItemsToCopy.find(itemName);
-                if (existingIt == mapOfItemsToCopy.end() || 
-                    (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
+                if (existingIt == mapOfItemsToCopy.end() || (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
                     mapOfItemsToCopy[itemName] = item;
                 }
             }
@@ -226,7 +225,7 @@ void syncDirectories(const size_t& idx) {
         bool found = false;
         for (const auto& [idOfVec, vecOfItems] : vecOfStates) {
             if (idOfVec == idx) continue;
-            if (std::ranges::any_of(vecOfItems, [&idItem](const auto& item) {return item.fileName == idItem.fileName;})) {
+            if (std::ranges::any_of(vecOfItems, [&idItem](const auto& lhs) {return lhs.fileName == idItem.fileName;})) {
                 found = true;
                 break;
             }
@@ -269,7 +268,7 @@ int main() {
     std::vector<std::filesystem::path> vecOfPaths;
 
     std::cout << "vec.size: " << vec1.size() << std::endl;
-    syncDirectories(0);
+    syncDirectories(1);
 
     
     // std::vector<std::vector<ScanItem>> vec = stateCompare(idx, vecOfPaths);
