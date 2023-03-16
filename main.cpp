@@ -6,8 +6,8 @@
 #include "ThreadTimer.h"
 #include "SyncFolder.h"
 #include "FileCheck.h"
-#include "ThreadPool.h"
 
+#include "ThreadPool.h"
 
 std::atomic<bool> once = true;
 std::atomic<bool> autoFolderSync{false};
@@ -102,22 +102,25 @@ void runDiff() {
     }
 }
 
-void sampleTask(const std::string& message) {
-    std::cout << "Wykonywanie zadania: " << message << std::endl;
+void sampleTask(const std::string &message) {
+    std::cout << "\n WYKKONANIE ZADANIA: " << message << std::endl;
 }
 
 int main() {
+#ifdef LOG_ENABLED
     std::cout << "[main] Thread pool test" << std::endl;
+#endif
     int threadNumbers = 4;
     ThreadPool threadPool(threadNumbers);
 
     // Zakolejkuj zadania
     for (int i = 0; i <= threadNumbers; ++i) {
-        std::string message = "Zadanie " + std::to_string(i);
+        std::string message = "ZADANIE " + std::to_string(i) + "\n";
+        threadPool.logWithThreadIdAndTime("main     ", "Dodaj zadanie: " + std::to_string(i));
         threadPool.enqueueTask(sampleTask, message);
     }
 
-    std::cout << "[main] Time for execution!" << std::endl;
+    threadPool.logWithThreadIdAndTime("main     ", "Time for execution!");
     threadPool.executeTasks();
 
 //    {

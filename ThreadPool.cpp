@@ -3,45 +3,49 @@
 
 
 ThreadPool::ThreadPool(int numThreads) : stop(false) {
-    logWithThreadIdAndTime("Thread", "ThreadPool constructor");
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    startTime = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+
+    logWithThreadIdAndTime("ThreadPool", "ThreadPool constructor");
     for (int i = 0; i <= numThreads; i++) {
-        logWithThreadIdAndTime("Thread", "Create thread");
+        logWithThreadIdAndTime("ThreadPool", "Create thread " + std::to_string(i+2));
         threads.emplace_back([this] {
-            logWithThreadIdAndTime("Thread", "start");
+            logWithThreadIdAndTime("ThreadPool", "start");
             while (true) {
-                logWithThreadIdAndTime("Thread", "WAIT while");
+                logWithThreadIdAndTime("ThreadPool", "WAIT while");
                 Task task;
                 { // Zablokowanie sekcji krytycznej
                     std::unique_lock<std::mutex> lock(queue_mutex);
-                    logWithThreadIdAndTime("Thread", "WAIT unique_lock");
+                    logWithThreadIdAndTime("ThreadPool", "WAIT unique_lock");
                     ///wait - oczekuje na sygnał od zmiennej condition
                     ///lambda - warunek sprawdzany przed każdym wybudzeniem
                     ///jeśli warunek jest spełniony to wychodzi z wait
                     ///jeśli warunek nie jest spełniony to odblokowuje mutex i czeka na sygnał
-                    logWithThreadIdAndTime("Thread", "WAIT wait");
+                    logWithThreadIdAndTime("ThreadPool", "WAIT wait");
                     condition.wait(lock, [this] { return stop || !tasks.empty(); });
-
-                    logWithThreadIdAndTime("Thread", "WAIT END");
+                    logWithThreadIdAndTime("ThreadPool", "WAIT END");
 
                     if (stop && tasks.empty()) {
                         return;
                     }
 
-                    logWithThreadIdAndTime("Thread", "move");
+                    logWithThreadIdAndTime("ThreadPool", "move");
 
                     //zdejmowania z kolejki i przypisywania do zmiennej task
                     task = std::move(tasks.front());
 
-                    logWithThreadIdAndTime("Thread", "pop");
+                    logWithThreadIdAndTime("ThreadPool", "pop");
                     //usuwanie z kolejki
                     tasks.pop();
 
                 } // Odblokowanie sekcji krytycznej
-                logWithThreadIdAndTime("Thread", "Task execute");
+                logWithThreadIdAndTime("ThreadPool", "Task execute");
                 task.func(task.arg);
             }
         });
     }
+
 }
 
 
@@ -75,45 +79,53 @@ void ThreadPool::enqueueTask(std::function<void(std::string)> func, std::string 
 
 void ThreadPool::executeTasks() {
     while (true) {
-        std::cout << "[Execute] lock" << std::endl;
+        logWithThreadIdAndTime("Execute", "lock");
         std::unique_lock<std::mutex> lock(queue_mutex);
 
-        std::cout << "[Execute] notify_one !!!" << std::endl;
+        logWithThreadIdAndTime("Execute", "notify_one");
         condition.notify_one();
 
         while (!stop && tasks.empty()) {
             //Czekanie na zadanie do wykonania i odblokowanie
-            std::cout << "[Execute] wait" << std::endl;
+            logWithThreadIdAndTime("Execute", "wait");
             condition.wait(lock);
         }
 
         //Jak stop jest true i kolejka jest pusta to zatrzymujemy wątki
         if (stop && tasks.empty()) {
-            std::cout << "[Execute] stop and return" << std::endl;
+            logWithThreadIdAndTime("Execute", "stop and return");
             return;
         }
 
         //zdejmowanie pierwszego elementu z kolejki
-        std::cout << "[Execute] pop" << std::endl;
-//        condition.notify_one();
+        logWithThreadIdAndTime("Execute", "notify_one");
         Task task = tasks.front();
         tasks.pop();
 
         //odblokowanie mutexa przed wykonaniem zadania(tutaj funkcji) aby inne wątki mogły dodać zadania
-        std::cout << "[Execute] unlock" << std::endl;
+        logWithThreadIdAndTime("Execute", "unlock");
         lock.unlock();
-        std::cout << "[Execute] execute" << std::endl;
+        logWithThreadIdAndTime("Execute", "execute");
         task.func(task.arg);
     }
 }
 
+
 void ThreadPool::logWithThreadIdAndTime(const std::string &where, const std::string &message) {
+std::stringstream ssWhereMessage;
+    ssWhereMessage << where << " " << message;
+
+#ifdef LOG_ENABLED
+
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
     auto micro = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
-    auto time = std::chrono::system_clock::to_time_t(now);
+    auto sec = (micro / 1000000) - startTime;
+    auto millis = (micro % 1000000) / 1000;
+    auto micros = micro % 1000;
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&time), "%F %T") << "." << std::setw(3) << std::setfill('0') << (millis % 1000);
+    ss << sec << "." << std::setfill('0') << std::setw(3) << millis << "." << std::setfill('0') << std::setw(3)
+       << micros;
 
     //casting thread id to int
     std::thread::id thread_id = std::this_thread::get_id();
@@ -121,6 +133,9 @@ void ThreadPool::logWithThreadIdAndTime(const std::string &where, const std::str
     ssForId << thread_id;
     unsigned long long id_as_ull;
     ssForId >> id_as_ull;
-    std::cout << "[" + where + "]" +
-                 ss.str() << "\t" << id_as_ull << "\t" << message << std::endl;
+    std::cout << ss.str() << "\t" << "[" + where + "]" <<
+              "\t" << "id: "<<id_as_ull << "\t" << message << std::endl;
+#endif // LOG_ENABLED
 }
+
+

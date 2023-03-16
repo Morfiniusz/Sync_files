@@ -9,6 +9,7 @@
 #include <chrono>
 #include <iomanip>
 
+#define LOG_ENABLED true
 
 // Struktura Task reprezentująca pojedyncze zadanie
 struct Task {
@@ -30,12 +31,14 @@ public:
     // Destruktor
     ~ThreadPool();
 
+    void logWithThreadIdAndTime(const std::string &where, const std::string &message);
+
 private:
     std::vector<std::thread> threads; // Wektor wątków
     std::queue<Task> tasks; // Kolejka zadań
     std::mutex queue_mutex; // Mutex dla kolejki zadań
     std::condition_variable condition; // Warunek dla sekcji krytycznej
-    bool stop; // Flaga zatrzymania threadpoola
 
-    void logWithThreadIdAndTime(const std::string &where, const std::string &message);
+    bool stop; // Flaga zatrzymania threadpoola
+    std::time_t startTime;
 };
