@@ -6,13 +6,14 @@
 #include <queue>
 #include <functional>
 #include <condition_variable>
+#include <chrono>
+#include <iomanip>
 
-using namespace std;
 
 // Struktura Task reprezentująca pojedyncze zadanie
 struct Task {
-    function<void(string)> func; // Funkcja do wykonania
-    string arg; // Argument dla funkcji
+    std::function<void(std::string)> func; // Funkcja do wykonania
+    std::string arg; // Argument dla funkcji
 };
 
 // Klasa ThreadPool
@@ -22,15 +23,19 @@ public:
     ThreadPool(int numThreads);
 
     // Dodanie zadania do kolejki
-    void enqueueTask(function<void(string)> func, string arg);
+    void enqueueTask(std::function<void(std::string)> func, std::string arg);
+
     void executeTasks();
+
     // Destruktor
     ~ThreadPool();
 
 private:
-    vector<thread> threads; // Wektor wątków
-    queue<Task> tasks; // Kolejka zadań
-    mutex queue_mutex; // Mutex dla kolejki zadań
-    condition_variable condition; // Warunek dla sekcji krytycznej
+    std::vector<std::thread> threads; // Wektor wątków
+    std::queue<Task> tasks; // Kolejka zadań
+    std::mutex queue_mutex; // Mutex dla kolejki zadań
+    std::condition_variable condition; // Warunek dla sekcji krytycznej
     bool stop; // Flaga zatrzymania threadpoola
+
+    void logWithThreadIdAndTime(const std::string &where, const std::string &message);
 };

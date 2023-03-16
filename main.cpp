@@ -102,19 +102,20 @@ void runDiff() {
     }
 }
 
+void sampleTask(const std::string& message) {
+    std::cout << "Wykonywanie zadania: " << message << std::endl;
+}
+
 int main() {
     std::cout << "[main] Thread pool test" << std::endl;
-    ThreadPool threadPool(2);
+    int threadNumbers = 4;
+    ThreadPool threadPool(threadNumbers);
 
-    std::cout<< "[main] Enqueue tasks1" << std::endl;
-    threadPool.enqueueTask([](string arg) {
-        std::cout << "My function1" << arg << std::endl;
-    }, " 'myArg1' ");
-
-    std::cout<< "[main] Enqueue tasks2" << std::endl;
-    threadPool.enqueueTask([](string arg) {
-        std::cout << "My function2" << arg << std::endl;
-    }, " 'myArg2' ");
+    // Zakolejkuj zadania
+    for (int i = 0; i <= threadNumbers; ++i) {
+        std::string message = "Zadanie " + std::to_string(i);
+        threadPool.enqueueTask(sampleTask, message);
+    }
 
     std::cout << "[main] Time for execution!" << std::endl;
     threadPool.executeTasks();
