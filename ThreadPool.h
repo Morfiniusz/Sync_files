@@ -31,7 +31,7 @@ public:
     // Destruktor
     ~ThreadPool();
 
-    void logWithThreadIdAndTime(const std::string &where, const std::string &message);
+    void threadLogger(const std::string &where, const std::string &message);
 
 private:
     std::vector<std::thread> threads; // Wektor wątków

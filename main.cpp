@@ -116,11 +116,11 @@ int main() {
     // Zakolejkuj zadania
     for (int i = 0; i <= threadNumbers; ++i) {
         std::string message = "ZADANIE " + std::to_string(i) + "\n";
-        threadPool.logWithThreadIdAndTime("main     ", "Dodaj zadanie: " + std::to_string(i));
+        threadPool.threadLogger("main     ", "Dodaj zadanie: " + std::to_string(i));
         threadPool.enqueueTask(sampleTask, message);
     }
 
-    threadPool.logWithThreadIdAndTime("main     ", "Time for execution!");
+    threadPool.threadLogger("main     ", "Time for execution!");
     threadPool.executeTasks();
 
 //    {
