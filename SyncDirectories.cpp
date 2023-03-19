@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <filesystem>
 #include <unordered_map>
@@ -68,65 +69,32 @@ auto SyncDirectories::stateCreator(const std::vector<std::pair<size_t,std::files
 
 
 void SyncDirectories::syncDirectories(const size_t& idx) {
+
     std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(mainFolderPath);
     std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(vecOfPaths);
 
-    printPairs(vecOfStates);
+    //printPairs(vecOfStates);
 
     const std::vector<ScanItem>& idxVec = vecOfStates.at(idx).second;
     const auto& idxVecPath = vecOfPaths.at(idx).second;
     std::unordered_map<std::string, ScanItem> mapOfItemsToCopy;
 
     for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
-        if (idxOfVec == idx) {
-            continue; // skip target directory
-        }
-        for (const auto& item : vecOfItemsToCheck) {
-            const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
-            auto it = idxVec.begin();
-            while (it != idxVec.end()) {
-                if (it->fileName == itemName && it->modyficationTime >= itemModTime && it->md5Sum == itemMd5Sum) {
-                    std::cout << "Skipping file " << it->fileName << " in " << it->filePath << " " << "compared to " << " it's up-to-date\n";
-                    break;
-                }
-                ++it;
-            }
-            if (it == idxVec.end()) {
-                // File not found in target directory, add to copy map
-                auto existingIt = mapOfItemsToCopy.find(itemName);
-                if (existingIt == mapOfItemsToCopy.end() || (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
-                    mapOfItemsToCopy[itemName] = item;
+        if(idxOfVec == idx ) continue;
+        for(const auto& itemsToCheck : vecOfItemsToCheck) {
+            for (const auto& itemIdx : idxVec) {
+                if(itemIdx.fileName == itemsToCheck.fileName && itemIdx.md5Sum == itemsToCheck.md5Sum) {
+                    if(itemIdx.modyficationTime > itemsToCheck.modyficationTime) {
+                        std::filesystem::copy_file(itemIdx.filePath, itemsToCheck.filePath, std::filesystem::copy_options::overwrite_existing);
+                        std::cout << "Modified file " << itemsToCheck.fileName << "overwite by: " << itemIdx.fileName << " from " << itemIdx.filePath.parent_path() << '\n';
+                    }
+                    else if (itemIdx.modyficationTime <= itemsToCheck.modyficationTime) {
+                        std::cout << "Skipping file " << itemsToCheck.fileName << "Newer file than in " << itemIdx.filePath << '\n';
+                    }
                 }
             }
         }
     }
-
-    for (const auto& idItem : idxVec) {
-        bool found = false;
-        for (const auto& [idOfVec, vecOfItems] : vecOfStates) {
-            if (idOfVec == idx) continue;
-            if (std::ranges::any_of(vecOfItems, [&idItem](const auto& lhs) {return lhs.fileName == idItem.fileName;})) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            std::cout << "Deleted file " << idItem.fileName << " from " << idItem.filePath.parent_path() << '\n';
-            std::filesystem::remove(idItem.filePath);
-        }
-    }
-
-
-
-    for (const auto& [name, item] : mapOfItemsToCopy) {
-        const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
-        const auto& idxFilePath = idxVecPath / itemName;
-        std::filesystem::copy_file(itemPath, idxFilePath, std::filesystem::copy_options::overwrite_existing);
-        std::cout << "Copied file " << itemName << " from " << itemPath << " to " << idxFilePath << '\n';
-    }
-
-    vecOfStates = stateCreator(vecOfPaths);
-    printPairs(vecOfStates);
 }
 
 
