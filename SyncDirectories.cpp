@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <chrono>
 #include <iostream>
 #include <filesystem>
 #include <unordered_map>
@@ -69,94 +68,66 @@ auto SyncDirectories::stateCreator(const std::vector<std::pair<size_t,std::files
 
 
 void SyncDirectories::syncDirectories(const size_t& idx) {
-
     std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(mainFolderPath);
     std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(vecOfPaths);
-    for (const auto& el : vecOfPaths) {
-        std::cout <<"Idx: " << el.first <<  "|  Path:  " << el.second << '\n';
-    }
-    
-    for (const auto& el : vecOfStates) {
-        std::cout <<"Idx: " << el.first <<'\n';
-        printVec(el.second);
-    }
-    //printPairs(vecOfStates);
+
+    printPairs(vecOfStates);
 
     const std::vector<ScanItem>& idxVec = vecOfStates.at(idx).second;
     const auto& idxVecPath = vecOfPaths.at(idx).second;
     std::unordered_map<std::string, ScanItem> mapOfItemsToCopy;
 
     for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
-            std::cout << "1.0\n";
-            std::cout <<"Idx: " << idxOfVec <<'\n';
-            printVec(vecOfItemsToCheck);
-        if(idxOfVec == idx ) continue;
-        for(const auto& itemsToCheck : vecOfItemsToCheck) {
-            const auto& [itemFileName, itemPath, itemModificationTime, itemMd5Sum] = itemsToCheck;
-            std::cout << "2.0\n";
-            std::cout <<"Idx: " << idxOfVec <<'\n';
-            printVec(vecOfItemsToCheck);
-            for(auto it = idxVec.begin(); it != idxVec.end();++it) {
-                std::cout << "3.0\n";
-                std::cout << "Source file name: " << it->fileName << " Target file name: " << itemFileName << '\n'; 
-                if(it->fileName == itemFileName && it->md5Sum == itemMd5Sum) {
-                    std::cout << "Source directory: " << it->md5Sum << " | Target directory: " << itemMd5Sum << " Target directory path: " << itemPath << '\n';
-                    if(it->modyficationTime > itemModificationTime) {
-                        std::filesystem::copy_file(it->filePath, itemPath, std::filesystem::copy_options::overwrite_existing);
-                        std::cout << "Modified file " << itemFileName << " overwite by: " << it->fileName << " from " << it->filePath.parent_path() << '\n';
-                    }
-                    if(it->modyficationTime < itemModificationTime) {
-                        std::cout << "Skipping file " << itemFileName << " in " << itemPath << " newer file than in " << it->fileName << '\n';
-                        // std::filesystem::copy_file(itemFileName, it->filePath, std::filesystem::copy_options::overwrite_existing);
-                        // std::cout << "Update in main directory " << it->fileName << " older than in " << itemPath << '\n';
-                    }
-                } else if (it->fileName == itemFileName && it->md5Sum != itemMd5Sum) {
-                     if(it->modyficationTime > itemModificationTime) {
-                        std::filesystem::copy_file(it->fileName, itemPath, std::filesystem::copy_options::overwrite_existing);
-                        std::cout << "Modified file " << itemFileName << "Path: " << itemPath << " overwite by: " << it->fileName << " from " << it->filePath.parent_path() << '\n';
-                    }
-                    if(it->modyficationTime < itemModificationTime) {
-                        std::cout << "Skipping file " << itemFileName << " in " << itemPath << " newer file than in " << it->fileName << '\n';
-                        std::filesystem::copy(itemPath, it->filePath, std::filesystem::copy_options::overwrite_existing);
-                        //std::filesystem::copy_file(itemFileName, it->filePath, std::filesystem::copy_options::overwrite_existing);
-                        std::cout << "Update in main directory " << it->fileName << " older than in " << itemPath << '\n';
-                    }
+        if (idxOfVec == idx) {
+            continue; // skip target directory
+        }
+        for (const auto& item : vecOfItemsToCheck) {
+            const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
+            auto it = idxVec.begin();
+            while (it != idxVec.end()) {
+                if (it->fileName == itemName && it->modyficationTime >= itemModTime && it->md5Sum == itemMd5Sum) {
+                    std::cout << "Skipping file " << it->fileName << " in " << it->filePath << " " << "compared to " << " it's up-to-date\n";
+                    break;
+                }
+                ++it;
+            }
+            if (it == idxVec.end()) {
+                // File not found in target directory, add to copy map
+                auto existingIt = mapOfItemsToCopy.find(itemName);
+                if (existingIt == mapOfItemsToCopy.end() || (existingIt->second.modyficationTime < itemModTime && existingIt->second.md5Sum != itemMd5Sum)) {
+                    mapOfItemsToCopy[itemName] = item;
                 }
             }
         }
     }
+
+    for (const auto& idItem : idxVec) {
+        bool found = false;
+        for (const auto& [idOfVec, vecOfItems] : vecOfStates) {
+            if (idOfVec == idx) continue;
+            if (std::ranges::any_of(vecOfItems, [&idItem](const auto& lhs) {return lhs.fileName == idItem.fileName;})) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            std::cout << "Deleted file " << idItem.fileName << " from " << idItem.filePath.parent_path() << '\n';
+            std::filesystem::remove(idItem.filePath);
+        }
+    }
+
+
+
+    for (const auto& [name, item] : mapOfItemsToCopy) {
+        const auto& [itemName, itemPath, itemModTime, itemMd5Sum] = item;
+        const auto& idxFilePath = idxVecPath / itemName;
+        std::filesystem::copy_file(itemPath, idxFilePath, std::filesystem::copy_options::overwrite_existing);
+        std::cout << "Copied file " << itemName << " from " << itemPath << " to " << idxFilePath << '\n';
+    }
+
+    vecOfStates = stateCreator(vecOfPaths);
+    printPairs(vecOfStates);
 }
-
-// for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
-//         if(idxOfVec == idx ) continue;
-//         for(const auto& itemsToCheck : vecOfItemsToCheck) {
-//             for (const auto& itemIdx : idxVec) {
-//                 if(itemIdx.fileName == itemsToCheck.fileName && itemIdx.md5Sum == itemsToCheck.md5Sum) {
-//                     if(itemIdx.modyficationTime > itemsToCheck.modyficationTime) {
-//                         std::filesystem::copy_file(itemIdx.filePath, itemsToCheck.filePath, std::filesystem::copy_options::overwrite_existing);
-//                         std::cout << "Modified file " << itemsToCheck.fileName << "overwite by: " << itemIdx.fileName << " from " << itemIdx.filePath.parent_path() << '\n';
-//                     }
-//                     else if (itemIdx.modyficationTime <= itemsToCheck.modyficationTime) {
-//                         std::cout << "Skipping file " << itemsToCheck.fileName << "Newer file than in " << itemIdx.filePath << '\n';
-//                     }
-//                 }
-//             }
-//         }
-//     }
-
-            // for (const auto& itemIdx : idxVec) {
-                
-            //     if(itemIdx.fileName == itemsToCheck.fileName && itemIdx.md5Sum == itemsToCheck.md5Sum) {
-            //         if(itemIdx.modyficationTime > itemsToCheck.modyficationTime) {
-            //             std::filesystem::copy_file(itemIdx.filePath, itemsToCheck.filePath, std::filesystem::copy_options::overwrite_existing);
-            //             std::cout << "Modified file " << itemsToCheck.fileName << "overwite by: " << itemIdx.fileName << " from " << itemIdx.filePath.parent_path() << '\n';
-            //         }
-            //         else if (itemIdx.modyficationTime <= itemsToCheck.modyficationTime) {
-            //             std::cout << "Skipping file " << itemsToCheck.fileName << "Newer file than in " << itemIdx.filePath << '\n';
-            //         }
-            //     }
-            // }
-
 
 
 

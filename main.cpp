@@ -146,7 +146,7 @@ int main() {
     std::vector<std::filesystem::path> vecOfPaths;
 
     std::cout << "vec.size: " << vec1.size() << std::endl;
-    sync.syncDirectories(0);
+    sync.syncDirectories(1);
 
 
     // ErrorCode variable = stateCompare(vec, vec2);
