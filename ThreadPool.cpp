@@ -16,11 +16,8 @@ ThreadPool::ThreadPool(int numThreads) : stop(false) {
                 threadLogger("ThreadPool", "WAIT while");
                 Task task;
                 { // Zablokowanie sekcji krytycznej
-                    std::unique_lock<std::mutex> lock(queue_mutex);
                     threadLogger("ThreadPool", "WAIT unique_lock");
-                    ///lambda - warunek sprawdzany przed każdym wybudzeniem
-                    ///jeśli warunek jest spełniony to wychodzi z wait
-                    ///jeśli warunek nie jest spełniony to odblokowuje mutex i czeka na sygnał
+                    std::unique_lock<std::mutex> lock(queue_mutex);
                     threadLogger("ThreadPool", "WAIT wait");
                     condition.wait(lock, [this] { return stop || !tasks.empty(); });
                     threadLogger("ThreadPool", "WAIT END");
@@ -61,9 +58,6 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::enqueueTask(std::function<void(std::string)> func, std::string arg) {
     { // Zablokowanie sekcji krytycznej
-        ///unique lock - blokuje mutex i odblokowuje go w destruktorze
-        ///jest lepszy od lock_guard bo pozwala na odblokowanie mutexa w dowolnym miejscu
-        ///queue_mutex, aby tylko jeden wątek mógł uzyskać dostęp do kolejki zadań.
         threadLogger("Enqueue", "lock");
         std::unique_lock<std::mutex> lock(queue_mutex);
         threadLogger("Enqueue", "push");
@@ -74,7 +68,6 @@ void ThreadPool::enqueueTask(std::function<void(std::string)> func, std::string 
     threadLogger("Enqueue", "notify_one");
     condition.notify_one();
 }
-
 
 void ThreadPool::executeTasks() {
     while (true) {
