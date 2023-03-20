@@ -82,20 +82,70 @@ void SyncDirectories::syncDirectories(const size_t& idx) {
     for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
         if(idxOfVec == idx ) continue;
         for(const auto& itemsToCheck : vecOfItemsToCheck) {
-            for (const auto& itemIdx : idxVec) {
-                if(itemIdx.fileName == itemsToCheck.fileName && itemIdx.md5Sum == itemsToCheck.md5Sum) {
-                    if(itemIdx.modyficationTime > itemsToCheck.modyficationTime) {
-                        std::filesystem::copy_file(itemIdx.filePath, itemsToCheck.filePath, std::filesystem::copy_options::overwrite_existing);
-                        std::cout << "Modified file " << itemsToCheck.fileName << "overwite by: " << itemIdx.fileName << " from " << itemIdx.filePath.parent_path() << '\n';
+            const auto& [itemFileName, itemPath, itemModificationTime, itemMd5Sum] = itemsToCheck;
+            for(auto it = idxVec.begin(); it != idxVec.end();++it) {
+                if (vecOfItemsToCheck.size() == 0) {
+                    std::filesystem::copy_file(it->filePath, vecOfPaths.at(idx).second);
+                    std::cout << "Empty destination folder copying files from source directory";
+                }
+                if(it->fileName == itemFileName && it->md5Sum == itemMd5Sum) {
+                    std::cout << "Source directory: " << it->md5Sum << " | Target directory: " << itemMd5Sum << " Target directory path: " << itemPath << '\n';
+                    if(it->modyficationTime > itemModificationTime) {
+                        std::filesystem::copy_file(it->filePath, itemPath, std::filesystem::copy_options::overwrite_existing);
+                        std::cout << "Modified file " << itemFileName << " overwite by: " << it->fileName << " from " << it->filePath.parent_path() << '\n';
                     }
-                    else if (itemIdx.modyficationTime <= itemsToCheck.modyficationTime) {
-                        std::cout << "Skipping file " << itemsToCheck.fileName << "Newer file than in " << itemIdx.filePath << '\n';
+                    if(it->modyficationTime < itemModificationTime) {
+                        std::cout << "Skipping file " << itemFileName << " in " << itemPath << " newer file than in " << it->fileName << '\n';
+                        // std::filesystem::copy_file(itemFileName, it->filePath, std::filesystem::copy_options::overwrite_existing);
+                        // std::cout << "Update in main directory " << it->fileName << " older than in " << itemPath << '\n';
+                    }
+                } else if (it->fileName == itemFileName && it->md5Sum != itemMd5Sum) {
+                     if(it->modyficationTime > itemModificationTime) {
+                        std::filesystem::copy_file(it->fileName, itemPath, std::filesystem::copy_options::overwrite_existing);
+                        std::cout << "Modified file " << itemFileName << "Path: " << itemPath << " overwite by: " << it->fileName << " from " << it->filePath.parent_path() << '\n';
+                    }
+                    if(it->modyficationTime < itemModificationTime) {
+                        std::cout << "Skipping file " << itemFileName << " in " << itemPath << " newer file than in " << it->filePath << '\n';
+                        std::filesystem::copy(itemPath, it->filePath, std::filesystem::copy_options::overwrite_existing);
+                        //std::filesystem::copy_file(itemFileName, it->filePath, std::filesystem::copy_options::overwrite_existing);
+                        std::cout << "Update in main directory " << it->fileName << " older than in " << itemPath << '\n';
                     }
                 }
             }
         }
     }
 }
+
+// for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
+//         if(idxOfVec == idx ) continue;
+//         for(const auto& itemsToCheck : vecOfItemsToCheck) {
+//             for (const auto& itemIdx : idxVec) {
+//                 if(itemIdx.fileName == itemsToCheck.fileName && itemIdx.md5Sum == itemsToCheck.md5Sum) {
+//                     if(itemIdx.modyficationTime > itemsToCheck.modyficationTime) {
+//                         std::filesystem::copy_file(itemIdx.filePath, itemsToCheck.filePath, std::filesystem::copy_options::overwrite_existing);
+//                         std::cout << "Modified file " << itemsToCheck.fileName << "overwite by: " << itemIdx.fileName << " from " << itemIdx.filePath.parent_path() << '\n';
+//                     }
+//                     else if (itemIdx.modyficationTime <= itemsToCheck.modyficationTime) {
+//                         std::cout << "Skipping file " << itemsToCheck.fileName << "Newer file than in " << itemIdx.filePath << '\n';
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+            // for (const auto& itemIdx : idxVec) {
+                
+            //     if(itemIdx.fileName == itemsToCheck.fileName && itemIdx.md5Sum == itemsToCheck.md5Sum) {
+            //         if(itemIdx.modyficationTime > itemsToCheck.modyficationTime) {
+            //             std::filesystem::copy_file(itemIdx.filePath, itemsToCheck.filePath, std::filesystem::copy_options::overwrite_existing);
+            //             std::cout << "Modified file " << itemsToCheck.fileName << "overwite by: " << itemIdx.fileName << " from " << itemIdx.filePath.parent_path() << '\n';
+            //         }
+            //         else if (itemIdx.modyficationTime <= itemsToCheck.modyficationTime) {
+            //             std::cout << "Skipping file " << itemsToCheck.fileName << "Newer file than in " << itemIdx.filePath << '\n';
+            //         }
+            //     }
+            // }
+
 
 
 
