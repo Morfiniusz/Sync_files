@@ -4,8 +4,6 @@
 #include <filesystem>
 #include <future>
 #include <ranges>
-#include <utility>
-#include <unordered_map>
 #include <vector>
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
@@ -132,40 +130,43 @@ void sampleTask(const std::string &message) {
 //     }
 // }
 
-//TODO: Thread pool - Bart
-//TODO: State compare - Lukasz
-//TODO: Scan folder - Marci
-
-//TODO: Action decision maker?
 int main() {
-#ifdef LOG_ENABLED
-    std::cout << "[main] Thread pool test" << std::endl;
-#endif
-    int threadNumbers = 4;
-    ThreadPool threadPool(threadNumbers);
     FileCheck fileCheck;
-    // std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
-    //std::filesystem::path md5Path("../Test/TestFolder/MasterFolder/md5.txt");
-    //std::cout << "MD5: " << fileCheck.getMD5(md5Path) << std::endl;
     SyncDirectories sync;
     auto vec1 = scanFolder(sourcePath);
     auto vec2 = scanFolder(destinationPath);
     auto vec3 = scanFolder(destinationPath2);
 
     std::vector<std::filesystem::path> vecOfPaths;
+    std::cout << "vec.size: " << vec1.size() << std::endl;
+    sync.syncDirectories(1);
 
+#ifdef LOG_ENABLED
+    std::cout << "[main] Thread pool test" << std::endl;
+#endif
+    int threadNumbers = 4;
+    ThreadPool threadPool(threadNumbers);
     // Zakolejkuj zadania
     for (int i = 0; i <= threadNumbers; ++i) {
         std::string message = "ZADANIE " + std::to_string(i) + "\n";
         threadPool.threadLogger("main     ", "Dodaj zadanie: " + std::to_string(i));
         threadPool.enqueueTask(sampleTask, message);
     }
-    std::cout << "vec.size: " << vec1.size() << std::endl;
-    sync.syncDirectories(1);
-
     threadPool.threadLogger("main     ", "Time for execution!");
     threadPool.executeTasks();
 
+//     ErrorCode variable = stateCompare(vec, vec2);
+//     switch(variable) {
+//         case ErrorCode::File_Exist_replace: {
+//             std::cout << "sth2\n";
+//             break;
+//         }
+//         case ErrorCode::File_Exist_dont_replace: {
+//             std::cout << "sth3\n";
+//             break;
+//         }
+//     }
+//
 //    {
 //        for (auto folder: syncFolders) {
 //            for (auto otherFolder: syncFolders) {
@@ -182,33 +183,21 @@ int main() {
 //
 //        mainMenu(threadTimers);
 //    }
-    // ErrorCode variable = stateCompare(vec, vec2);
-    // switch(variable) {
-    //     case ErrorCode::File_Exist_replace: {
-    //         std::cout << "sth2\n";
-    //         break;
-    //     }
-    //     case ErrorCode::File_Exist_dont_replace: {
-    //         std::cout << "sth3\n";
-    //         break;
-    //     }
-    // }
-    // {
-    //     for (auto folder: syncFolders) {
-    //         for (auto otherFolder: syncFolders) {
-    //             if (folder != otherFolder) {
-    //                 folder->registerObserver(otherFolder.get());
-    //             }
-    //         }
-    //     }
-
-    //     for (auto &syncFolder: syncFolders) {
-    //         threadTimers.emplace_back(
-    //                 std::make_shared<ThreadTimer>([&syncFolder]() { syncFolder->checkForChanges(); }));
-    //     }
-
-    //     mainMenu(threadTimers);
-    // }
-
+//     {
+//         for (auto folder: syncFolders) {
+//             for (auto otherFolder: syncFolders) {
+//                 if (folder != otherFolder) {
+//                     folder->registerObserver(otherFolder.get());
+//                 }
+//             }
+//         }
+//
+//         for (auto &syncFolder: syncFolders) {
+//             threadTimers.emplace_back(
+//                     std::make_shared<ThreadTimer>([&syncFolder]() { syncFolder->checkForChanges(); }));
+//         }
+//
+//         mainMenu(threadTimers);
+//     }
     return 0;
 }
