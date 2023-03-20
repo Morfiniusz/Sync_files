@@ -72,7 +72,14 @@ void SyncDirectories::syncDirectories(const size_t& idx) {
 
     std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(mainFolderPath);
     std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(vecOfPaths);
-
+    for (const auto& el : vecOfPaths) {
+        std::cout <<"Idx: " << el.first <<  "|  Path:  " << el.second << '\n';
+    }
+    
+    for (const auto& el : vecOfStates) {
+        std::cout <<"Idx: " << el.first <<'\n';
+        printVec(el.second);
+    }
     //printPairs(vecOfStates);
 
     const std::vector<ScanItem>& idxVec = vecOfStates.at(idx).second;
@@ -80,14 +87,18 @@ void SyncDirectories::syncDirectories(const size_t& idx) {
     std::unordered_map<std::string, ScanItem> mapOfItemsToCopy;
 
     for (const auto& [idxOfVec, vecOfItemsToCheck] : vecOfStates) {
+            std::cout << "1.0\n";
+            std::cout <<"Idx: " << idxOfVec <<'\n';
+            printVec(vecOfItemsToCheck);
         if(idxOfVec == idx ) continue;
         for(const auto& itemsToCheck : vecOfItemsToCheck) {
             const auto& [itemFileName, itemPath, itemModificationTime, itemMd5Sum] = itemsToCheck;
+            std::cout << "2.0\n";
+            std::cout <<"Idx: " << idxOfVec <<'\n';
+            printVec(vecOfItemsToCheck);
             for(auto it = idxVec.begin(); it != idxVec.end();++it) {
-                if (vecOfItemsToCheck.size() == 0) {
-                    std::filesystem::copy_file(it->filePath, vecOfPaths.at(idx).second);
-                    std::cout << "Empty destination folder copying files from source directory";
-                }
+                std::cout << "3.0\n";
+                std::cout << "Source file name: " << it->fileName << " Target file name: " << itemFileName << '\n'; 
                 if(it->fileName == itemFileName && it->md5Sum == itemMd5Sum) {
                     std::cout << "Source directory: " << it->md5Sum << " | Target directory: " << itemMd5Sum << " Target directory path: " << itemPath << '\n';
                     if(it->modyficationTime > itemModificationTime) {
@@ -105,7 +116,7 @@ void SyncDirectories::syncDirectories(const size_t& idx) {
                         std::cout << "Modified file " << itemFileName << "Path: " << itemPath << " overwite by: " << it->fileName << " from " << it->filePath.parent_path() << '\n';
                     }
                     if(it->modyficationTime < itemModificationTime) {
-                        std::cout << "Skipping file " << itemFileName << " in " << itemPath << " newer file than in " << it->filePath << '\n';
+                        std::cout << "Skipping file " << itemFileName << " in " << itemPath << " newer file than in " << it->fileName << '\n';
                         std::filesystem::copy(itemPath, it->filePath, std::filesystem::copy_options::overwrite_existing);
                         //std::filesystem::copy_file(itemFileName, it->filePath, std::filesystem::copy_options::overwrite_existing);
                         std::cout << "Update in main directory " << it->fileName << " older than in " << itemPath << '\n';
