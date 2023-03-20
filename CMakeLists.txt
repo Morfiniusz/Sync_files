@@ -18,6 +18,10 @@ set(Observer
         SyncFolder.h
         FileCheck.cpp
         FileCheck.h
+        ScanFolder.h
+        ScanFolder.cpp
+        SyncDirectories.cpp
+        SyncDirectories.h
         ThreadPool.cpp
         ThreadPool.h
         )

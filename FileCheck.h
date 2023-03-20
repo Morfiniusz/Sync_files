@@ -15,7 +15,7 @@
 class FileCheck {
 public:
     //add md5 file checking
-    std::string getMD5(const std::filesystem::path& filePath);
+    static std::string getMD5(const std::filesystem::path& filePath);
 
     private:
     std::filesystem::path folderPath;
