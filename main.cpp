@@ -29,10 +29,10 @@ enum class MENU_OPTIONS {
 };
 
 const std::filesystem::path currentPath = std::filesystem::current_path();
-const std::filesystem::path mainFolderPath = currentPath.parent_path() / "Test/TestFolder";
-const std::filesystem::path sourcePath = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
-const std::filesystem::path destinationPath = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
-const std::filesystem::path destinationPath2 = currentPath.parent_path() / "Test/TestFolder/DestinationFolder2";
+const std::filesystem::path mainFolderPath = currentPath.parent_path() / "Test\\TestFolder";
+const std::filesystem::path sourcePath = currentPath.parent_path() / "Test\\TestFolder\\MasterFolder";
+const std::filesystem::path destinationPath = currentPath.parent_path() / "Test\\TestFolder\\DestinationFolder";
+const std::filesystem::path destinationPath2 = currentPath.parent_path() / "Test\\TestFolder\\DestinationFolder2";
 
 ObservedFolder observedFolder(sourcePath);
 ObserverFolder observerFolder(destinationPath);
@@ -113,23 +113,6 @@ void sampleTask(const std::string &message) {
     std::cout << "\n WYKKONANIE ZADANIA: " << message << std::endl;
 }
 
-// void printVec(const std::vector<ScanItem>& vec) {
-//     for( auto& item : vec )
-//     {
-//         std::cout << "File name: " << item.fileName << std::endl;
-//         std::cout << "File path: " << item.filePath << std::endl;
-
-//         // std::time_t cftime = decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime);
-//         std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(std::filesystem::file_time_type::clock::time_point(item.modyficationTime)));
-//         std::stringstream ss;
-//         ss << std::put_time(std::localtime(&cftime), "%Y-%m-%d %X");
-//         std::cout << "File modification time: " << ss.str() << std::endl;
-//         // std::cout << "modyficationTime: " << decltype(item.modyficationTime)::clock::to_time_t(item.modyficationTime) << std::endl;
-//         std::cout << "File md5: " << item.md5Sum << std::endl;
-//         std::cout << "---" << std::endl;
-//     }
-// }
-
 int main() {
     FileCheck fileCheck;
     SyncDirectories sync;
@@ -137,7 +120,7 @@ int main() {
     auto vec2 = scanFolder(destinationPath);
     auto vec3 = scanFolder(destinationPath2);
 
-    std::vector<std::filesystem::path> vecOfPaths;
+//    std::vector<std::filesystem::path> vecOfPaths;
     std::cout << "vec.size: " << vec1.size() << std::endl;
     sync.syncDirectories(1);
 
@@ -155,49 +138,5 @@ int main() {
     threadPool.threadLogger("main     ", "Time for execution!");
     threadPool.executeTasks();
 
-//     ErrorCode variable = stateCompare(vec, vec2);
-//     switch(variable) {
-//         case ErrorCode::File_Exist_replace: {
-//             std::cout << "sth2\n";
-//             break;
-//         }
-//         case ErrorCode::File_Exist_dont_replace: {
-//             std::cout << "sth3\n";
-//             break;
-//         }
-//     }
-//
-//    {
-//        for (auto folder: syncFolders) {
-//            for (auto otherFolder: syncFolders) {
-//                if (folder != otherFolder) {
-//                    folder->registerObserver(otherFolder.get());
-//                }
-//            }
-//        }
-//
-//        for (auto &syncFolder: syncFolders) {
-//            threadTimers.emplace_back(
-//                    std::make_shared<ThreadTimer>([&syncFolder]() { syncFolder->checkForChanges(); }));
-//        }
-//
-//        mainMenu(threadTimers);
-//    }
-//     {
-//         for (auto folder: syncFolders) {
-//             for (auto otherFolder: syncFolders) {
-//                 if (folder != otherFolder) {
-//                     folder->registerObserver(otherFolder.get());
-//                 }
-//             }
-//         }
-//
-//         for (auto &syncFolder: syncFolders) {
-//             threadTimers.emplace_back(
-//                     std::make_shared<ThreadTimer>([&syncFolder]() { syncFolder->checkForChanges(); }));
-//         }
-//
-//         mainMenu(threadTimers);
-//     }
     return 0;
 }
