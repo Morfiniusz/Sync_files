@@ -8,7 +8,7 @@ ThreadPool::ThreadPool(int numThreads) : stop(false) {
     startTime = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
 
     threadLogger("ThreadPool", "ThreadPool constructor");
-    for (int i = 0; i <= numThreads; i++) {
+    for (int i = 0; i < numThreads; i++) {
         threadLogger("ThreadPool", "Create thread " + std::to_string(i + 2));
         threads.emplace_back([this] {
             threadLogger("ThreadPool", "start");

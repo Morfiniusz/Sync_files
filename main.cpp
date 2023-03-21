@@ -121,22 +121,21 @@ int main() {
     auto vec3 = scanFolder(destinationPath2);
 
 //    std::vector<std::filesystem::path> vecOfPaths;
-    std::cout << "vec.size: " << vec1.size() << std::endl;
 //    sync.syncDirectories(1);
 
 #ifdef LOG_ENABLED
+    std::cout << "vec.size: " << vec1.size() << std::endl;
     std::cout << "[main] Thread pool test" << std::endl;
 #endif
-    int threadNumbers = 4;
+    int threadNumbers = 2;
     ThreadPool threadPool(threadNumbers);
     // Enqueue tasks
-    for (int i = 0; i <= 3; ++i) {
-        std::string message = "TASK " + std::to_string(i) + "\n";
+    for (int i = 0; i < 2; ++i) {
         threadPool.threadLogger("main     ", "Add task: " + std::to_string(i));
         threadPool.enqueueTask( [&sync](size_t idx){sync.syncDirectories(idx);}, static_cast<size_t>(1));
     }
     threadPool.threadLogger("main     ", "Time for execution!");
-    threadPool.executeTasks();
+//    threadPool.executeTasks();
 
     return 0;
 }
