@@ -56,7 +56,7 @@ ThreadPool::~ThreadPool() {
     }
 }
 
-void ThreadPool::enqueueTask(std::function<void(std::string)> func, std::string arg) {
+void ThreadPool::enqueueTask(std::function<void(size_t idx)> func, size_t arg) {
     { // Zablokowanie sekcji krytycznej
         threadLogger("Enqueue", "lock");
         std::unique_lock<std::mutex> lock(queue_mutex);
@@ -104,7 +104,7 @@ void ThreadPool::executeTasks() {
 
 
 void ThreadPool::threadLogger(const std::string &where, const std::string &message) {
-std::stringstream ssWhereMessage;
+    std::stringstream ssWhereMessage;
     ssWhereMessage << where << " " << message;
 
 #ifdef LOG_ENABLED
@@ -126,7 +126,7 @@ std::stringstream ssWhereMessage;
     unsigned long long id_as_ull;
     ssForId >> id_as_ull;
     std::cout << ss.str() << "\t" << "[" + where + "]" <<
-              "\t" << "id: "<<id_as_ull << "\t" << message << std::endl;
+              "\t" << "id: " << id_as_ull << "\t" << message << std::endl;
 #endif // LOG_ENABLED
 }
 

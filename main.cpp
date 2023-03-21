@@ -122,18 +122,18 @@ int main() {
 
 //    std::vector<std::filesystem::path> vecOfPaths;
     std::cout << "vec.size: " << vec1.size() << std::endl;
-    sync.syncDirectories(1);
+//    sync.syncDirectories(1);
 
 #ifdef LOG_ENABLED
     std::cout << "[main] Thread pool test" << std::endl;
 #endif
     int threadNumbers = 4;
     ThreadPool threadPool(threadNumbers);
-    // Zakolejkuj zadania
-    for (int i = 0; i <= threadNumbers; ++i) {
-        std::string message = "ZADANIE " + std::to_string(i) + "\n";
-        threadPool.threadLogger("main     ", "Dodaj zadanie: " + std::to_string(i));
-        threadPool.enqueueTask(sampleTask, message);
+    // Enqueue tasks
+    for (int i = 0; i <= 3; ++i) {
+        std::string message = "TASK " + std::to_string(i) + "\n";
+        threadPool.threadLogger("main     ", "Add task: " + std::to_string(i));
+        threadPool.enqueueTask( [&sync](size_t idx){sync.syncDirectories(idx);}, static_cast<size_t>(1));
     }
     threadPool.threadLogger("main     ", "Time for execution!");
     threadPool.executeTasks();

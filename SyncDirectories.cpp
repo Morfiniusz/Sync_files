@@ -67,11 +67,11 @@ auto SyncDirectories::stateCreator(const std::vector<std::pair<size_t,std::files
 
 
 
-void SyncDirectories::syncDirectories(const size_t& idx) {
+void SyncDirectories::syncDirectories(size_t idx) {
     std::vector<std::pair<size_t, std::filesystem::path>> vecOfPaths = pathFinder(mainFolderPath);
     std::vector<std::pair<size_t, std::vector<ScanItem>>> vecOfStates = stateCreator(vecOfPaths);
 
-    printPairs(vecOfStates);
+//    printPairs(vecOfStates);
 
     const std::vector<ScanItem>& idxVec = vecOfStates.at(idx).second;
     const auto& idxVecPath = vecOfPaths.at(idx).second;
@@ -126,7 +126,7 @@ void SyncDirectories::syncDirectories(const size_t& idx) {
     }
 
     vecOfStates = stateCreator(vecOfPaths);
-    printPairs(vecOfStates);
+//    printPairs(vecOfStates);
 }
 
 

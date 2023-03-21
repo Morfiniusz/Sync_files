@@ -11,20 +11,19 @@
 
 #define LOG_ENABLED true
 
-// Struktura Task reprezentująca pojedyncze zadanie
+// Structure Task represents a task to be done
 struct Task {
-    std::function<void(std::string)> func; // Funkcja do wykonania
-    std::string arg; // Argument dla funkcji
+    std::function<void(size_t idx)> func; // Functor to do
+     size_t arg; // Argument to do
 };
 
-// Klasa ThreadPool
 class ThreadPool {
 public:
-    // Konstruktor tutaj deklaruje ile wątków ma być w puli
+    // The constructor here declares how many threads should be in the pool.
     ThreadPool(int numThreads);
 
-    // Dodanie zadania do kolejki
-    void enqueueTask(std::function<void(std::string)> func, std::string arg);
+    // Adding a task to the queue
+    void enqueueTask(std::function<void(size_t idx)> func, size_t  arg);
 
     void executeTasks();
 

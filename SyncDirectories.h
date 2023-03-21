@@ -26,7 +26,7 @@ void printVec(const std::vector<ScanItem>& );
 void printMap(const std::unordered_map<std::string, ScanItem>& );
 auto pathFinder(const std::filesystem::path& );
 auto stateCreator(const std::vector<std::pair<size_t,std::filesystem::path>>& );
-void syncDirectories(const size_t& );
+void syncDirectories(size_t idx);
 // size_t getIdx() const;
 // void setIdx(size_t );
 
