@@ -12,9 +12,13 @@
 #include <algorithm>
 #include <openssl/md5.h>
 
+
+/// \brief Class for creating the md5 hash of a file
 class FileCheck {
 public:
     //add md5 file checking
+    /// \brief function for creating the md5 hash of a file
+    /// \param filePath path to the file which should be hashed
     static std::string getMD5(const std::filesystem::path& filePath);
 
     private:
