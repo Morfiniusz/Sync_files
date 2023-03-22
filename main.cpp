@@ -29,10 +29,10 @@ enum class MENU_OPTIONS {
 };
 
 const std::filesystem::path currentPath = std::filesystem::current_path();
-const std::filesystem::path mainFolderPath = currentPath.parent_path() / "Test\\TestFolder";
-const std::filesystem::path sourcePath = currentPath.parent_path() / "Test\\TestFolder\\MasterFolder";
-const std::filesystem::path destinationPath = currentPath.parent_path() / "Test\\TestFolder\\DestinationFolder";
-const std::filesystem::path destinationPath2 = currentPath.parent_path() / "Test\\TestFolder\\DestinationFolder2";
+const std::filesystem::path mainFolderPath = currentPath.parent_path() / "CheckFolder";
+const std::filesystem::path sourcePath = currentPath.parent_path() / "CheckFolder\\MasterFolder";
+const std::filesystem::path destinationPath = currentPath.parent_path() / "CheckFolder\\DestinationFolder";
+const std::filesystem::path destinationPath2 = currentPath.parent_path() / "CheckFolder\\DestinationFolder2";
 
 ObservedFolder observedFolder(sourcePath);
 ObserverFolder observerFolder(destinationPath);
@@ -98,17 +98,6 @@ void mainMenu(std::vector<std::shared_ptr<ThreadTimer>> threadTimersParam) {
     }
 }
 
-void runDiff() {
-    while (threadRun) {
-        if (autoFolderSync) {
-            syncFolder1->checkForChanges();
-            syncFolder2->checkForChanges();
-            syncFolder3->checkForChanges();
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-}
-
 int main() {
     FileCheck fileCheck;
     SyncDirectories sync;
@@ -116,21 +105,15 @@ int main() {
     auto vec2 = scanFolder(destinationPath);
     auto vec3 = scanFolder(destinationPath2);
 
-//    std::vector<std::filesystem::path> vecOfPaths;
-//    sync.syncDirectories(1);
-
 #ifdef LOG_ENABLED
     std::cout << "vec.size: " << vec1.size() << std::endl;
     std::cout << "[main] Thread pool test" << std::endl;
 #endif
-    int threadNumbers = 2;
-    ThreadPool threadPool(threadNumbers);
+    ThreadPool threadPool(4);
     // Enqueue tasks
-    for (int i = 0; i < 2; ++i) {
-        threadPool.threadLogger("main     ", "Add task: " + std::to_string(i));
-        threadPool.enqueueTask( [&sync](size_t idx){sync.syncDirectories(idx);}, static_cast<size_t>(1));
-        threadPool.enqueueTask( [&sync](size_t idx){sync.syncDirectories(idx);}, static_cast<size_t>(2));
-    }
+    threadPool.enqueueTask([&sync](size_t idx) { sync.syncDirectories(idx); }, static_cast<size_t>(1));
+    threadPool.enqueueTask([&sync](size_t idx) { sync.syncDirectories(idx); }, static_cast<size_t>(2));
+    threadPool.enqueueTask([&sync](size_t idx) { sync.syncDirectories(idx); }, static_cast<size_t>(1));
     threadPool.threadLogger("main     ", "Time for execution!");
 
     return 0;
