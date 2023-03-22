@@ -109,10 +109,6 @@ void runDiff() {
     }
 }
 
-void sampleTask(const std::string &message) {
-    std::cout << "\n WYKKONANIE ZADANIA: " << message << std::endl;
-}
-
 int main() {
     FileCheck fileCheck;
     SyncDirectories sync;
@@ -133,9 +129,9 @@ int main() {
     for (int i = 0; i < 2; ++i) {
         threadPool.threadLogger("main     ", "Add task: " + std::to_string(i));
         threadPool.enqueueTask( [&sync](size_t idx){sync.syncDirectories(idx);}, static_cast<size_t>(1));
+        threadPool.enqueueTask( [&sync](size_t idx){sync.syncDirectories(idx);}, static_cast<size_t>(2));
     }
     threadPool.threadLogger("main     ", "Time for execution!");
-//    threadPool.executeTasks();
 
     return 0;
 }
