@@ -1,12 +1,19 @@
+#include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <filesystem>
 #include <future>
+#include <ranges>
+#include <vector>
 #include "ObservedFolder.h"
 #include "ObserverFolder.h"
 #include "ThreadTimer.h"
 #include "SyncFolder.h"
 #include "FileCheck.h"
+#include "ScanFolder.h"
+#include "SyncDirectories.h"
 
+#include "ThreadPool.h"
 
 std::atomic<bool> once = true;
 std::atomic<bool> autoFolderSync{false};
@@ -22,9 +29,10 @@ enum class MENU_OPTIONS {
 };
 
 const std::filesystem::path currentPath = std::filesystem::current_path();
-const std::filesystem::path sourcePath = currentPath.parent_path() / "Test/TestFolder/MasterFolder";
-const std::filesystem::path destinationPath = currentPath.parent_path() / "Test/TestFolder/DestinationFolder";
-const std::filesystem::path destinationPath2 = currentPath.parent_path() / "Test/TestFolder/DestinationFolder2";
+const std::filesystem::path mainFolderPath = currentPath.parent_path() / "Test\\TestFolder";
+const std::filesystem::path sourcePath = currentPath.parent_path() / "Test\\TestFolder\\MasterFolder";
+const std::filesystem::path destinationPath = currentPath.parent_path() / "Test\\TestFolder\\DestinationFolder";
+const std::filesystem::path destinationPath2 = currentPath.parent_path() / "Test\\TestFolder\\DestinationFolder2";
 
 ObservedFolder observedFolder(sourcePath);
 ObserverFolder observerFolder(destinationPath);
@@ -101,27 +109,33 @@ void runDiff() {
     }
 }
 
+void sampleTask(const std::string &message) {
+    std::cout << "\n WYKKONANIE ZADANIA: " << message << std::endl;
+}
+
 int main() {
     FileCheck fileCheck;
-    std::filesystem::path md5Path("D:/CPP/AdvancedCpp/Projekt1/Sync_files/Test/TestFolder/MasterFolder/md5.txt");
-    std::cout << "MD5: " << fileCheck.getMD5(md5Path) << std::endl;
+    SyncDirectories sync;
+    auto vec1 = scanFolder(sourcePath);
+    auto vec2 = scanFolder(destinationPath);
+    auto vec3 = scanFolder(destinationPath2);
 
-    {
-        for (auto folder: syncFolders) {
-            for (auto otherFolder: syncFolders) {
-                if (folder != otherFolder) {
-                    folder->registerObserver(otherFolder.get());
-                }
-            }
-        }
+//    std::vector<std::filesystem::path> vecOfPaths;
+//    sync.syncDirectories(1);
 
-        for (auto &syncFolder: syncFolders) {
-            threadTimers.emplace_back(
-                    std::make_shared<ThreadTimer>([&syncFolder]() { syncFolder->checkForChanges(); }));
-        }
-
-        mainMenu(threadTimers);
+#ifdef LOG_ENABLED
+    std::cout << "vec.size: " << vec1.size() << std::endl;
+    std::cout << "[main] Thread pool test" << std::endl;
+#endif
+    int threadNumbers = 2;
+    ThreadPool threadPool(threadNumbers);
+    // Enqueue tasks
+    for (int i = 0; i < 2; ++i) {
+        threadPool.threadLogger("main     ", "Add task: " + std::to_string(i));
+        threadPool.enqueueTask( [&sync](size_t idx){sync.syncDirectories(idx);}, static_cast<size_t>(1));
     }
+    threadPool.threadLogger("main     ", "Time for execution!");
+//    threadPool.executeTasks();
 
     return 0;
 }
